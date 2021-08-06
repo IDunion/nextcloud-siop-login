@@ -10,5 +10,7 @@
 return [
     'routes' => [
         ['name' => 'login#oidc', 'url' => '/oidc', 'verb' => 'GET'],
+        ['name' => 'login#callback', 'url' => '/oidc/callback', 'verb' => 'GET'],
+        ['name' => 'login#backend', 'url' => '/backend', 'verb' => 'POST'],
     ]
 ];

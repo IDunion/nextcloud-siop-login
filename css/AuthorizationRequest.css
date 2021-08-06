@@ -1,0 +1,29 @@
+#header {
+    display: none !important;
+}
+
+#content {
+    padding-top: 0%;
+}
+
+h1 {
+    color: white;
+    font-size: x-large;
+    padding: 20px;
+}
+
+h2 {
+    color: white;
+}
+
+p {
+    color: white;
+    padding: 20px;
+}
+
+.center {
+    position: absolute;
+    top: 25%;
+    width: 100%;
+}
+

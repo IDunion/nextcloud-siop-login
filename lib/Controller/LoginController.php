@@ -15,7 +15,20 @@ use OCP\ISession;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OC\User\LoginException;
 use OC\Authentication\Token\DefaultTokenProvider;
-use OCA\OIDCLogin\Provider\OpenIDConnectClient;
+use OCP\AppFramework\Http\TemplateResponse;
+
+require_once __DIR__ . '/../../3rdparty/autoload.php';
+
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Writer\SvgWriter;
+
+use Jose\Component\Core\JWK;
+use Jose\Easy\Load;
+
+use function Safe\json_decode;
 
 class LoginController extends Controller
 {
@@ -67,45 +80,104 @@ class LoginController extends Controller
      */
     public function oidc()
     {
-        $callbackUrl = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.oidc');
+        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
+        $redirectUriPost = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
+        $nonce = strval(random_int(1000000000,9999999999)) . strval(random_int(1000000000,9999999999));
+        $_SESSION['nonce'] = $nonce;
 
-        try {
-            // Construct new client
-            $oidc = new OpenIDConnectClient(
-                $this->session,
-                $this->config->getSystemValue('oidc_login_provider_url'),
-                $this->config->getSystemValue('oidc_login_client_id'),
-                $this->config->getSystemValue('oidc_login_client_secret'));
-            $oidc->setRedirectURL($callbackUrl);
+        $claims = array(
+            'vp_token' => array(
+                'presentation_definition' => array(
+                    'input_descriptors' => array(
+                        array(
+                            'name' => 'proof_req_1',
+                            'schema' => array(
+                                array('uri' => 'did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1', 'required' => true),
+                            )
+                        ),
+                    ),
+                ),
+            ),
+        );
 
-            // set TLS development mode
-            $oidc->setVerifyHost($this->config->getSystemValue('oidc_login_tls_verify', true));
-            $oidc->setVerifyPeer($this->config->getSystemValue('oidc_login_tls_verify', true));
+        $registration = array(
+            'subject_identifier_types_supported' => array('jkt'),
+            'vp_formats' => array('vp_ac' => array('EdDSA', 'ES256K')),
+            'id_token_signing_alg_values_supported' => array('ES384'),
+        );
 
-            // Set OpenID Connect Scope
-            $scope = $this->config->getSystemValue('oidc_login_scope', 'openid');
-            $oidc->addScope($scope);
+        $ar = array(
+            'response_type' => 'id_token',
+            'client_id' => $redirectUri,
+            'redirect_uri' => $redirectUri,
+            'scope' => 'openid',
+            'claims' => json_encode($claims),
+            'nonce' => $nonce,
+            'registration' => json_encode($registration)
+        );
 
-            // Authenticate
-            $oidc->authenticate();
+        $arUrl = "openid://?" . http_build_query($ar);
 
-            // Get user information from OIDC
-            $user = $oidc->requestUserInfo();
+        $result = Builder::create()
+            ->writer(new SvgWriter())
+            ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
+            ->data('https://google.com')
+            ->encoding(new Encoding('UTF-8'))
+            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+            ->size(300)
+            ->margin(10)
+            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
+            ->build();
+        $dataUri = $result->getDataUri();
+        
+        $params = array(
+            'qr' => $dataUri,
+            'ar' => $arUrl,
+        );
 
-            // Convert to PHP array and process
-            return $this->authSuccess(json_decode(json_encode($user), true));
+        return new TemplateResponse('oidc_login', 'AuthorizationRequest', $params);
+    }
 
-        } catch (\Exception $e) {
-            // Go to noredir page if fallback enabled
-            if ($this->config->getSystemValue('oidc_login_redir_fallback', false)) {
-                $noRedirLoginUrl = $this->urlGenerator->linkToRouteAbsolute('core.login.showLoginForm') . '?noredir=1';
-                header('Location: ' . $noRedirLoginUrl);
-                exit();
-            }
+    /**
+     * @PublicPage
+     * @NoCSRFRequired
+     * @UseSession
+     */
+    public function callback() {
+        $idTokenRaw = $_GET['id_token'];
+        $vpTokenRaw = $_GET['vp_token'];
 
-            // Show error page
-            \OC_Template::printErrorPage($e->getMessage());
-        }
+        // extract key from JWT payload
+        $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
+        $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
+        $jwkJSON = $idTokenPayload['sub_jwk'];
+        $jwk = JWK::createFromJson(json_encode($jwkJSON));
+
+        // validate JWT signature
+        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
+        $idToken = Load::jws($idTokenRaw)
+            ->algs(['ES384'])
+            ->aud($redirectUri)
+            ->iss('https://self-issued.me/v2')
+            ->sub($jwk->thumbprint('sha256'))
+            ->key($jwk)
+            ->run();
+
+        $sub = $idToken->claims->sub();
+
+        // extract attributes from Anoncred Proof
+        $vpToken = json_decode($vpTokenRaw, true);
+        $firstName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['first_name']['raw'];
+        $lastName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['last_name']['raw'];
+        $email = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['email']['raw'];
+
+        // build array with user data for the login process
+        $profile = array(
+            "sub" => $sub,
+            "email" => $email,
+            "name" => $firstName . " " . $lastName,
+        );
+        return $this->login($profile);
     }
 
     private function authSuccess($profile)
