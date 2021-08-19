@@ -4,6 +4,8 @@ namespace OCA\OIDCLogin\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\IAppData;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IConfig;
@@ -48,6 +50,8 @@ class LoginController extends Controller
     private $l;
     /** @var \OCA\Files_External\Service\GlobalStoragesService */
     private $storagesService;
+    /** @var IAppData */
+    private $appData;
 
 
     public function __construct(
@@ -60,6 +64,7 @@ class LoginController extends Controller
         IGroupManager $groupManager,
         ISession $session,
         IL10N $l,
+        IAppData $appData,
         $storagesService
     ) {
         parent::__construct($appName, $request);
@@ -70,6 +75,7 @@ class LoginController extends Controller
         $this->groupManager = $groupManager;
         $this->session = $session;
         $this->l = $l;
+        $this->appData = $appData;
         $this->storagesService = $storagesService;
     }
 
@@ -83,7 +89,7 @@ class LoginController extends Controller
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         $redirectUriPost = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
         $nonce = strval(random_int(1000000000,9999999999)) . strval(random_int(1000000000,9999999999));
-        $_SESSION['nonce'] = $nonce;
+        $this->session['nonce'] = $nonce;
 
         $claims = array(
             'vp_token' => array(
@@ -106,6 +112,31 @@ class LoginController extends Controller
             'id_token_signing_alg_values_supported' => array('ES384'),
         );
 
+        $arPost = array(
+            'response_type' => 'id_token',
+            'response_mode' => 'post',
+            'client_id' => $redirectUri,
+            'redirect_uri' => $redirectUriPost,
+            'scope' => 'openid',
+            'claims' => json_encode($claims),
+            'nonce' => $nonce,
+            'registration' => json_encode($registration)
+        );
+
+        $arUrlPost = "openid://?" . http_build_query($arPost);
+
+        $result = Builder::create()
+            ->writer(new SvgWriter())
+            ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
+            ->data($arUrlPost)
+            ->encoding(new Encoding('UTF-8'))
+            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
+            ->size(500)
+            ->margin(0)
+            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
+            ->build();
+        $dataUri = $result->getDataUri();
+
         $ar = array(
             'response_type' => 'id_token',
             'client_id' => $redirectUri,
@@ -117,35 +148,120 @@ class LoginController extends Controller
         );
 
         $arUrl = "openid://?" . http_build_query($ar);
-
-        $result = Builder::create()
-            ->writer(new SvgWriter())
-            ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
-            ->data('https://google.com')
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-            ->build();
-        $dataUri = $result->getDataUri();
         
         $params = array(
             'qr' => $dataUri,
+            'arPost' => $arUrlPost,
             'ar' => $arUrl,
+            'pollingUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.polling'),
+            'callbackUri' => $redirectUri,
         );
 
         return new TemplateResponse('oidc_login', 'AuthorizationRequest', $params);
+    }
+
+    private function getSessionFile() {
+        $folder = $this->appData->getFolder('/');
+        if (!$folder->fileExists('sessions.csv')) {
+            return $folder->newFile('sessions.csv');
+        } else {
+            return $folder->getFile('sessions.csv');
+        }
+    }
+
+    private function readSessionFile() {
+        $file = $this->getSessionFile();
+        $fp = $file->read();
+        $content = array();
+        while (($data = fgetcsv($fp)) !== FALSE) {
+            array_push($content, $data);
+        }
+        fclose($fp);
+        return $content;
+    }
+
+    private function saveSession($idTokenRaw, $vpTokenRaw) {
+        // extract nonce from JWT payload
+        $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
+        $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
+        $nonce = $idTokenPayload['nonce'];
+
+        // create session array
+        $session = array(
+            time(), $nonce, $idTokenRaw, $vpTokenRaw
+        );
+
+        $sessions = $this->readSessionFile();
+        array_push($sessions, $session);
+        $file = $this->getSessionFile();
+        $fp = $file->write();
+        foreach ($sessions as $s) {
+            // only keep sessions that are not older than one day
+            if ($s[0] > (time() - 86400)) {
+                fputcsv($fp, $s);
+            }
+        }        
+        fclose($fp);  
+    }
+
+    private function getSession($nonce) {
+        $sessions = $this->readSessionFile();
+        foreach ($sessions as $s) {
+            if ($s[1] == $nonce) {
+                return $s;
+            }
+        }
+        return FALSE;
+    }
+
+    /**
+     * @PublicPage
+     * @NoCSRFRequired
+     */
+    public function backend($id_token, $vp_token) {
+        $this->saveSession($id_token, $vp_token);
+    }
+
+    /**
+     * @PublicPage
+     * @NoCSRFRequired
+     */
+    public function polling() {
+        $nonce = $this->session['nonce'];
+        if (empty($this->getSession($nonce))) {
+            return new JSONResponse(array('finished' => FALSE));
+        }
+        return new JSONResponse(array('finished' => TRUE));
     }
 
     /**
      * @PublicPage
      * @NoCSRFRequired
      * @UseSession
+     * @param bool $from_file
      */
-    public function callback() {
-        $idTokenRaw = $_GET['id_token'];
-        $vpTokenRaw = $_GET['vp_token'];
+    public function callback($from_file=FALSE, $id_token='', $vp_token='') {
+        $nonceFromSession = $this->session['nonce'];
+        $found = FALSE;
+        if (!$from_file) {
+            if (strlen($id_token) != 0 && strlen($vp_token) != 0) {
+                $idTokenRaw = $id_token;
+                $vpTokenRaw = $vp_token;    
+                $found = TRUE;
+                $this->saveSession($idTokenRaw, $vpTokenRaw);
+            }
+        } else {            
+            $session = $this->getSession($nonceFromSession);
+            if (!empty($session)) {
+                $idTokenRaw = $session[2];
+                $vpTokenRaw = $session[3];
+                $found = TRUE;
+            }
+        }
+        if (!$found) {
+            throw new LoginException("No id_token or vp_token passed to callback method");
+        }
+
 
         // extract key from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
@@ -164,6 +280,12 @@ class LoginController extends Controller
             ->run();
 
         $sub = $idToken->claims->sub();
+        $nonce = $idToken->claims->nonce();
+
+        // check if the nonce from the id_token matches the session nonce
+        if ($nonce != $nonceFromSession) {
+            throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
+        }
 
         // extract attributes from Anoncred Proof
         $vpToken = json_decode($vpTokenRaw, true);
