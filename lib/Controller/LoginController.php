@@ -262,7 +262,6 @@ class LoginController extends Controller
             throw new LoginException("No id_token or vp_token passed to callback method");
         }
 
-
         // extract key from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
         $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
@@ -299,7 +298,7 @@ class LoginController extends Controller
             "email" => $email,
             "name" => $firstName . " " . $lastName,
         );
-        return $this->login($profile);
+        return $this->authSuccess($profile);
     }
 
     private function authSuccess($profile)
