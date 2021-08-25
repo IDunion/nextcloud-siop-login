@@ -205,8 +205,31 @@ extern indy_error_t indy_verifier_verify_proof(indy_handle_t command_handle,
                                                                     indy_bool_t   valid )
                                                 );
 
+// indy_pool.h
+extern indy_error_t indy_create_pool_ledger_config(indy_handle_t command_handle,
+                                                    const char *  config_name,
+                                                    const char *  config,
+                                                    void          (*cb)(indy_handle_t command_handle_, indy_error_t err)
+                                                    );
+                        
+extern indy_error_t indy_delete_pool_ledger_config(indy_handle_t command_handle,
+                                                    const char *  config_name,
+                                                    void          (*cb)(indy_handle_t command_handle_, indy_error_t err)
+                                                    );
+
+extern indy_error_t indy_open_pool_ledger(indy_handle_t command_handle,
+                                            const char *  config_name,
+                                            const char *  config,
+                                            void          (*cb)(indy_handle_t command_handle_, indy_error_t err, indy_handle_t pool_handle)
+                                            );
+
+
+// indy_wallet.h
 extern indy_error_t indy_create_wallet(indy_handle_t  command_handle,
                                         const char*    config,
                                         const char*    credentials,
                                         void           (*fn)(indy_handle_t command_handle_, indy_error_t err)
                                         );
+
+// indy_logger.h
+extern indy_error_t indy_set_default_logger(const char *  pattern );
