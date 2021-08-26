@@ -294,7 +294,7 @@ class LoginController extends Controller
 
         // build array with user data for the login process
         $profile = array(
-            "sub" => $sub,
+            "sub" => $email,
             "email" => $email,
             "name" => $firstName . " " . $lastName,
         );

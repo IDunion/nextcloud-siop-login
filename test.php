@@ -8,7 +8,7 @@ $future = $libIndy->createSchema("CsiDLAiFkQb9N4NDJKUagd", 'test', "0.1", '["nam
 var_dump($future->get());
 
 //$libIndy->setDefaultLogger("trace");
-putenv("HOME=/tmp"); // workddaround for lib indy to load the genesis file
+putenv("HOME=/tmp"); // workaround for lib indy to load the genesis file
 $configName = "idunion_test_ledger";
 $config = '{"genesis_txn":"'.__DIR__.'/lib/LibIndyWrapper/genesis_txn.txt"}';
 try {
