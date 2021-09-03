@@ -25,5 +25,10 @@ p {
     position: absolute;
     top: 10%;
     width: 100%;
+    padding: 20px;
+}
+
+.qrcode {
+    max-width: -webkit-fill-available !important;
 }
 

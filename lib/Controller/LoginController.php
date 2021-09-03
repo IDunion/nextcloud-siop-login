@@ -174,34 +174,39 @@ class LoginController extends Controller
         $fp = $file->read();
         $content = array();
         while (($data = fgetcsv($fp)) !== FALSE) {
+            if ($data == NULL) {
+                break;
+            }
             array_push($content, $data);
         }
         fclose($fp);
         return $content;
     }
 
-    private function saveSession($idTokenRaw, $vpTokenRaw) {
+    private function saveSession($idTokenRaw, $vpTokenRaw, $backend) {
         // extract nonce from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
         $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
         $nonce = $idTokenPayload['nonce'];
 
-        // create session array
-        $session = array(
-            time(), $nonce, $idTokenRaw, $vpTokenRaw
-        );
+        if (!empty($nonce)) {
+            // create session array
+            $session = array(
+                time(), $nonce, $idTokenRaw, $vpTokenRaw, $backend
+            );
 
-        $sessions = $this->readSessionFile();
-        array_push($sessions, $session);
-        $file = $this->getSessionFile();
-        $fp = $file->write();
-        foreach ($sessions as $s) {
-            // only keep sessions that are not older than one day
-            if ($s[0] > (time() - 86400)) {
-                fputcsv($fp, $s);
-            }
-        }        
-        fclose($fp);  
+            $sessions = $this->readSessionFile();
+            array_push($sessions, $session);
+            $file = $this->getSessionFile();
+            $fp = $file->write();
+            foreach ($sessions as $s) {
+                // only keep sessions that are not older than one day
+                if ($s[0] > (time() - 86400)) {
+                    fputcsv($fp, $s);
+                }
+            }        
+            fclose($fp);  
+        }
     }
 
     private function getSession($nonce) {
@@ -219,7 +224,7 @@ class LoginController extends Controller
      * @NoCSRFRequired
      */
     public function backend($id_token, $vp_token) {
-        $this->saveSession($id_token, $vp_token);
+        $this->saveSession($id_token, $vp_token, "1");
     }
 
     /**
@@ -228,10 +233,11 @@ class LoginController extends Controller
      */
     public function polling() {
         $nonce = $this->session['nonce'];
-        if (empty($this->getSession($nonce))) {
+        $session = $this->getSession($nonce);
+        if (empty($session)) {
             return new JSONResponse(array('finished' => FALSE));
         }
-        return new JSONResponse(array('finished' => TRUE));
+        return new JSONResponse(array('finished' => TRUE, 'backend' => $session[4]));
     }
 
     /**
@@ -248,7 +254,7 @@ class LoginController extends Controller
                 $idTokenRaw = $id_token;
                 $vpTokenRaw = $vp_token;    
                 $found = TRUE;
-                $this->saveSession($idTokenRaw, $vpTokenRaw);
+                $this->saveSession($idTokenRaw, $vpTokenRaw, "0");
             }
         } else {            
             $session = $this->getSession($nonceFromSession);
@@ -270,7 +276,7 @@ class LoginController extends Controller
 
         // validate JWT signature
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
-        $idToken = Load::jws($idTokenRaw)
+        /*$idToken = Load::jws($idTokenRaw)
             ->algs(['ES384'])
             ->aud($redirectUri)
             ->iss('https://self-issued.me/v2')
@@ -284,13 +290,13 @@ class LoginController extends Controller
         // check if the nonce from the id_token matches the session nonce
         if ($nonce != $nonceFromSession) {
             throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
-        }
+        }*/
 
         // extract attributes from Anoncred Proof
         $vpToken = json_decode($vpTokenRaw, true);
-        $firstName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['first_name']['raw'];
-        $lastName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['last_name']['raw'];
-        $email = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['attr1_referent']['values']['email']['raw'];
+        $firstName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['first_name']['raw'];
+        $lastName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['last_name']['raw'];
+        $email = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['email']['raw'];
 
         // build array with user data for the login process
         $profile = array(

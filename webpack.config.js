@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require("webpack");
 
+// Compile with: webpack
 module.exports = {
     mode: 'production',
     entry: './js/AuthorizationRequest.js',

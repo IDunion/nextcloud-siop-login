@@ -1,6 +1,6 @@
 if(OCA.Theming) {
     console.log("change color");
-    $('.myapp-element').css({backgroundColor:OCA.Theming.color});
+    $('.background-color').css({backgroundColor:OCA.Theming.color});
 }
 
 $(document).ready(function() {
