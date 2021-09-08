@@ -1,0 +1,39 @@
+{
+    "vp_token": {
+        "presentation_definition": {
+            "id":"nextcloudlogin",
+            "input_descriptors": [
+                {
+                    "id": "ref1",
+                    "name": "NextCloudPrototypeCredential",
+                    "schema": [
+                        {
+                            "uri": "did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1",
+                            "required": true
+                        }
+                    ],
+                        "constraints": {
+                            "limit_disclosure": "required",
+                            "fields": [
+                                {
+                                    "path": [
+                                        "$.values.last_name"
+                                    ]
+                                },
+                                {
+                                    "path": [
+                                        "$.values.first_name"
+                                    ]
+                                },
+                                {
+                                    "path": [
+                                        "$.values.email"
+                                    ]
+                                }
+                            ]
+                        }
+                }
+            ]
+        }
+    }
+}

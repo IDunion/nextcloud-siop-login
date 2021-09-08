@@ -1,0 +1,12 @@
+{
+    "ver": "1.0",
+    "id": "3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1",
+    "name": "BasicScheme",
+    "version": "0.1",
+    "attrNames": [
+        "last_name",
+        "first_name",
+        "email"
+    ],
+    "seqNo": 4687
+}
