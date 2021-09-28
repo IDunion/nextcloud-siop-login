@@ -209,6 +209,7 @@ extern indy_error_t indy_verifier_verify_proof(indy_handle_t command_handle,
 extern indy_error_t indy_create_pool_ledger_config(indy_handle_t command_handle,
                                                     const char *  config_name,
                                                     const char *  config,
+
                                                     void          (*cb)(indy_handle_t command_handle_, indy_error_t err)
                                                     );
                         
@@ -220,14 +221,60 @@ extern indy_error_t indy_delete_pool_ledger_config(indy_handle_t command_handle,
 extern indy_error_t indy_open_pool_ledger(indy_handle_t command_handle,
                                             const char *  config_name,
                                             const char *  config,
+
                                             void          (*cb)(indy_handle_t command_handle_, indy_error_t err, indy_handle_t pool_handle)
                                             );
 
+// indy_ledger.h
+extern indy_error_t indy_build_get_schema_request(indy_handle_t command_handle,
+                                                    const char *  submitter_did,
+                                                    const char *  id,
+
+                                                    void           (*cb)(indy_handle_t command_handle_,
+                                                                        indy_error_t  err,
+                                                                        const char*   request_json)
+                                                    );
+
+extern indy_error_t indy_submit_request(indy_handle_t command_handle,
+                                        indy_handle_t pool_handle,
+                                        const char *  request_json,
+
+                                        void           (*cb)(indy_handle_t command_handle_,
+                                                                indy_error_t  err,
+                                                                const char*   request_result_json)
+                                        );
+
+extern indy_error_t indy_parse_get_schema_response(indy_handle_t command_handle,
+                                                    const char *  get_schema_response,
+
+                                                    void           (*cb)(indy_handle_t command_handle_,
+                                                                        indy_error_t  err,
+                                                                        const char*   schema_id,
+                                                                        const char*   schema_json)
+                                                    );
+
+extern indy_error_t indy_build_get_cred_def_request(indy_handle_t command_handle,
+                                                    const char *  submitter_did,
+                                                    const char *  id,
+
+                                                    void           (*cb)(indy_handle_t command_handle_,
+                                                                        indy_error_t  err,
+                                                                        const char*   request_json)
+                                                    );
+
+extern indy_error_t indy_parse_get_cred_def_response(indy_handle_t command_handle,
+                                                    const char *  get_cred_def_response,
+                                                    void           (*cb)(indy_handle_t command_handle_,
+                                                                        indy_error_t  err,
+                                                                        const char*   cred_def_id,
+                                                                        const char*   cred_def_json)
+                                                    );
 
 // indy_wallet.h
 extern indy_error_t indy_create_wallet(indy_handle_t  command_handle,
                                         const char*    config,
                                         const char*    credentials,
+
                                         void           (*fn)(indy_handle_t command_handle_, indy_error_t err)
                                         );
 

@@ -18,6 +18,8 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OC\User\LoginException;
 use OC\Authentication\Token\DefaultTokenProvider;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
+use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
@@ -96,6 +98,7 @@ class LoginController extends Controller
                 'presentation_definition' => array(
                     'input_descriptors' => array(
                         array(
+                            'id' => 'ref1',
                             'name' => 'proof_req_1',
                             'schema' => array(
                                 array('uri' => 'did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1', 'required' => true),
@@ -109,13 +112,13 @@ class LoginController extends Controller
         $registration = array(
             'subject_identifier_types_supported' => array('jkt'),
             'vp_formats' => array('vp_ac' => array('EdDSA', 'ES256K')),
-            'id_token_signing_alg_values_supported' => array('ES384'),
+            'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
         );
 
         $arPost = array(
             'response_type' => 'id_token',
             'response_mode' => 'post',
-            'client_id' => $redirectUri,
+            'client_id' => $redirectUriPost,
             'redirect_uri' => $redirectUriPost,
             'scope' => 'openid',
             'claims' => json_encode($claims),
@@ -277,7 +280,7 @@ class LoginController extends Controller
         // validate JWT signature
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         /*$idToken = Load::jws($idTokenRaw)
-            ->algs(['ES384'])
+            ->algs(['ES384', 'RS256'])
             ->aud($redirectUri)
             ->iss('https://self-issued.me/v2')
             ->sub($jwk->thumbprint('sha256'))
@@ -285,12 +288,63 @@ class LoginController extends Controller
             ->run();
 
         $sub = $idToken->claims->sub();
-        $nonce = $idToken->claims->nonce();
+        $nonce = $idToken->claims->nonce();*/
+        $nonce = $idTokenPayload['nonce'];
 
         // check if the nonce from the id_token matches the session nonce
         if ($nonce != $nonceFromSession) {
             throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
-        }*/
+        }
+
+        
+        $proof = substr(str_replace('[{"format":"vp_ac","presentation":', '', $vpTokenRaw),0 , -2);
+
+        $libIndy = new LibIndy();
+
+        putenv("HOME=/tmp"); // workaround for lib indy to load the genesis file
+        $configName = "idunion_test_ledger";
+        $config = '{"genesis_txn":"'.__DIR__.'/../LibIndyWrapper/genesis_txn.txt"}';
+        try {
+            $libIndy->createPoolLedgerConfig($configName, $config)->get();
+        } catch (LibIndyException $e) {
+            $libIndy->deletePoolLedgerConfig($configName)->get();
+            $libIndy->createPoolLedgerConfig($configName, $config)->get();
+        }
+
+        $poolHandle = $libIndy->openPoolLedger($configName)->get();
+
+        $schemaRequest = $libIndy->buildGetSchemaRequest("3QowxFtwciWceMFr7WbwnM", "did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1")->get();
+        $schemaResponseRaw = $libIndy->submitRequest($poolHandle, $schemaRequest)->get();
+        $schemaResponse = $libIndy->parseGetSchemaResponse($schemaResponseRaw)->get();
+
+
+        $credDefRequest = $libIndy->buildGetCredDefRequest("CsiDLAiFkQb9N4NDJKUagd", "CsiDLAiFkQb9N4NDJKUagd:3:CL:4687:NextcloudPrototypeCredentialWithoutRev")->get();
+        $credDefResponseRaw = $libIndy->submitRequest($poolHandle, $credDefRequest)->get();
+        $credDefResponse = $libIndy->parseGetCredDefResponse($credDefResponseRaw)->get();
+
+        $proofRequest = json_encode(array(
+            "nonce" => $nonce,
+            "name" => "proof_req_1",
+            "version" => "1.0",
+            "requested_attributes" => array(
+                "ref1" => array(
+                    "names" => array("first_name", "last_name", "email"),
+                    "restrictions" => array(array("schema_id" => $schemaResponse->getId()))
+                )
+            )
+        ));
+        $schemas = json_encode(array(
+            $schemaResponse->getId() => json_decode($schemaResponse->getJson())
+        ));
+        $credentials = json_encode(array(
+            $credDefResponse->getId() => json_decode($credDefResponse->getJson())
+        ));
+        
+        $valid = $libIndy->verifierVerifyProof($proofRequest, $proof, $schemas, $credentials, "{}", "{}")->get();
+        
+        if (!$valid->isValid()) {
+            throw new LoginException("Credential verification failed");
+        }
 
         // extract attributes from Anoncred Proof
         $vpToken = json_decode($vpTokenRaw, true);
