@@ -2,17 +2,17 @@ version: "3"
 
 services:
   nextcloud:
-    build: 
-      context: ../
-      dockerfile: docker/Dockerfile
+    build: .
     network_mode: host
     user: 1000:1000
     environment:
       - PORT=8080
-    entrypoint: ls -lh apps/oidc_login
+    sysctls:
+        - "kernel.msgmnb=65536"
+        - "kernel.msgmax=65536"
     volumes:
       - "$PWD/docker/config:/var/www/html/config"
       - "$PWD/docker/data:/var/www/html/data"
-      #- "$PWD/docker/apps:/var/www/html/custom_apps"
-      - "$PWD:/var/www/html/apps/oidc_login"
+      - "$PWD/docker/apps:/var/www/html/custom_apps"
+      - "$PWD:/var/www/html/custom_apps/oidc_login"
       

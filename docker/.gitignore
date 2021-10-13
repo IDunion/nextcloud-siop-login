@@ -1,4 +1,5 @@
 apps/
-config/
+config/*
+!config/custom.config.php
 data/
 themes/
