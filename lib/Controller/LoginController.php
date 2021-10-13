@@ -18,8 +18,11 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OC\User\LoginException;
 use OC\Authentication\Token\DefaultTokenProvider;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
+use OCA\OIDCLogin\Db\Token;
+use OCA\OIDCLogin\Db\TokenMapper;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
@@ -67,6 +70,8 @@ class LoginController extends Controller
         ISession $session,
         IL10N $l,
         IAppData $appData,
+        TokenMapper $tokenMapper,
+        ITimeFactory $timeFactory,
         $storagesService
     ) {
         parent::__construct($appName, $request);
@@ -78,6 +83,8 @@ class LoginController extends Controller
         $this->session = $session;
         $this->l = $l;
         $this->appData = $appData;
+        $this->tokenMapper = $tokenMapper;
+        $this->timeFactory = $timeFactory;
         $this->storagesService = $storagesService;
     }
 
@@ -88,6 +95,10 @@ class LoginController extends Controller
      */
     public function oidc()
     {
+        if ($redirectUrl = $this->request->getParam('login_redirect_url')) {
+            $this->session->set('login_redirect_url', $redirectUrl);
+        }
+
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         $redirectUriPost = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
         $nonce = strval(random_int(1000000000,9999999999)) . strval(random_int(1000000000,9999999999));
@@ -111,7 +122,7 @@ class LoginController extends Controller
 
         $registration = array(
             'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array('vp_ac' => array('EdDSA', 'ES256K')),
+            'vp_formats' => array('ac_vp' => array('EdDSA', 'ES256K')),
             'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
         );
 
@@ -163,63 +174,31 @@ class LoginController extends Controller
         return new TemplateResponse('oidc_login', 'AuthorizationRequest', $params);
     }
 
-    private function getSessionFile() {
-        $folder = $this->appData->getFolder('/');
-        if (!$folder->fileExists('sessions.csv')) {
-            return $folder->newFile('sessions.csv');
-        } else {
-            return $folder->getFile('sessions.csv');
-        }
-    }
-
-    private function readSessionFile() {
-        $file = $this->getSessionFile();
-        $fp = $file->read();
-        $content = array();
-        while (($data = fgetcsv($fp)) !== FALSE) {
-            if ($data == NULL) {
-                break;
-            }
-            array_push($content, $data);
-        }
-        fclose($fp);
-        return $content;
-    }
-
-    private function saveSession($idTokenRaw, $vpTokenRaw, $backend) {
+    private function saveTokens(string $idTokenRaw, string $vpTokenRaw, bool $used) {
         // extract nonce from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
         $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
         $nonce = $idTokenPayload['nonce'];
 
         if (!empty($nonce)) {
-            // create session array
-            $session = array(
-                time(), $nonce, $idTokenRaw, $vpTokenRaw, $backend
-            );
-
-            $sessions = $this->readSessionFile();
-            array_push($sessions, $session);
-            $file = $this->getSessionFile();
-            $fp = $file->write();
-            foreach ($sessions as $s) {
-                // only keep sessions that are not older than one day
-                if ($s[0] > (time() - 86400)) {
-                    fputcsv($fp, $s);
-                }
-            }        
-            fclose($fp);  
+            $token = new Token();
+            $token->setNonce($nonce);
+            $token->setIdToken($idTokenRaw);
+            $token->setVpToken($vpTokenRaw);
+            $token->setUsed($used);
+            $token->setCreationTimestamp($this->timeFactory->getTime());
+            $this->tokenMapper->insert($token);
+            return $token;
         }
+        return null;
     }
 
-    private function getSession($nonce) {
-        $sessions = $this->readSessionFile();
-        foreach ($sessions as $s) {
-            if ($s[1] == $nonce) {
-                return $s;
-            }
+    private function getTokens($nonce) {
+        try {
+            return $this->tokenMapper->find($nonce);
+        } catch (DoesNotExistException $e) {
+            return null;
         }
-        return FALSE;
     }
 
     /**
@@ -227,7 +206,7 @@ class LoginController extends Controller
      * @NoCSRFRequired
      */
     public function backend($id_token, $vp_token) {
-        $this->saveSession($id_token, $vp_token, "1");
+        $this->saveTokens($id_token, $vp_token, false);
     }
 
     /**
@@ -236,41 +215,42 @@ class LoginController extends Controller
      */
     public function polling() {
         $nonce = $this->session['nonce'];
-        $session = $this->getSession($nonce);
-        if (empty($session)) {
+        $tokens = $this->getTokens($nonce);
+        if (empty($tokens)) {
             return new JSONResponse(array('finished' => FALSE));
         }
-        return new JSONResponse(array('finished' => TRUE, 'backend' => $session[4]));
+        return new JSONResponse(array('finished' => TRUE));
     }
 
     /**
      * @PublicPage
      * @NoCSRFRequired
      * @UseSession
-     * @param bool $from_file
      */
-    public function callback($from_file=FALSE, $id_token='', $vp_token='') {
+    public function callback($id_token='', $vp_token='') {
         $nonceFromSession = $this->session['nonce'];
-        $found = FALSE;
-        if (!$from_file) {
-            if (strlen($id_token) != 0 && strlen($vp_token) != 0) {
-                $idTokenRaw = $id_token;
-                $vpTokenRaw = $vp_token;    
-                $found = TRUE;
-                $this->saveSession($idTokenRaw, $vpTokenRaw, "0");
+             
+        // check if we have tokens for this session in the database
+        $tokens = $this->getTokens($nonceFromSession);
+        if (!empty($tokens)) {
+            // if the tokens where already used redirect to user to the main page
+            if ($tokens->getUsed()) {
+                return $this->redirectToMainPage();
             }
-        } else {            
-            $session = $this->getSession($nonceFromSession);
-            if (!empty($session)) {
-                $idTokenRaw = $session[2];
-                $vpTokenRaw = $session[3];
-                $found = TRUE;
-            }
-        }
-        if (!$found) {
+
+            $idTokenRaw = $tokens->getIdToken();
+            $vpTokenRaw = $tokens->getVpToken();
+            $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
+        } elseif (strlen($id_token) != 0 && strlen($vp_token) != 0) {
+            // if no tokens are in the database look for the ones in the GET parameter
+            $idTokenRaw = $id_token;
+            $vpTokenRaw = $vp_token;
+            $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
+        } else {
+            // if no tokens where found, cancel login with error page
             throw new LoginException("No id_token or vp_token passed to callback method");
         }
-
+        
         // extract key from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
         $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
@@ -278,18 +258,18 @@ class LoginController extends Controller
         $jwk = JWK::createFromJson(json_encode($jwkJSON));
 
         // validate JWT signature
-        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
-        /*$idToken = Load::jws($idTokenRaw)
+        $idToken = Load::jws($idTokenRaw)
             ->algs(['ES384', 'RS256'])
             ->aud($redirectUri)
             ->iss('https://self-issued.me/v2')
             ->sub($jwk->thumbprint('sha256'))
+            ->exp()    
+            ->iat()    
+            ->nbf()
             ->key($jwk)
             ->run();
 
-        $sub = $idToken->claims->sub();
-        $nonce = $idToken->claims->nonce();*/
-        $nonce = $idTokenPayload['nonce'];
+        $nonce = $idToken->claims->nonce();
 
         // check if the nonce from the id_token matches the session nonce
         if ($nonce != $nonceFromSession) {
@@ -301,7 +281,6 @@ class LoginController extends Controller
 
         $libIndy = new LibIndy();
 
-        putenv("HOME=/tmp"); // workaround for lib indy to load the genesis file
         $configName = "idunion_test_ledger";
         $config = '{"genesis_txn":"'.__DIR__.'/../LibIndyWrapper/genesis_txn.txt"}';
         try {
@@ -358,7 +337,15 @@ class LoginController extends Controller
             "email" => $email,
             "name" => $firstName . " " . $lastName,
         );
-        return $this->authSuccess($profile);
+
+        // after successful verification save the tokens in the database or update the entry
+        if (empty($tokens)) {
+            $tokens = $this->saveTokens($idTokenRaw, $vpTokenRaw, true);
+        }
+        $tokens->setUsed(true);
+        $this->tokenMapper->update($tokens);
+        
+        return $this->login($profile);
     }
 
     private function authSuccess($profile)
@@ -649,6 +636,10 @@ class LoginController extends Controller
         // Prevent being asked to change password
         $this->session->set('last-password-confirm', \OC::$server->query(ITimeFactory::class)->getTime());
 
+        return $this->redirectToMainPage();
+    }
+
+    private function redirectToMainPage() {
         // Go to redirection URI
         if ($redirectUrl = $this->session->get('login_redirect_url')) {
             return new RedirectResponse($redirectUrl);

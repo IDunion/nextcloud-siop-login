@@ -2,23 +2,17 @@ version: "3"
 
 services:
   nextcloud:
-    build: .
+    build: 
+      context: ../
+      dockerfile: docker/Dockerfile
     network_mode: host
     user: 1000:1000
     environment:
       - PORT=8080
+    entrypoint: ls -lh apps/oidc_login
     volumes:
-      - "$PWD/docker/apps:/var/www/html/custom_apps"
       - "$PWD/docker/config:/var/www/html/config"
       - "$PWD/docker/data:/var/www/html/data"
-      - "$PWD/docker/themes:/var/www/html/themes"
-      - "$PWD/3rdparty:/var/www/html/custom_apps/oidc_login/3rdparty"
-      - "$PWD/appinfo:/var/www/html/custom_apps/oidc_login/appinfo"
-      - "$PWD/css:/var/www/html/custom_apps/oidc_login/css"
-      - "$PWD/js:/var/www/html/custom_apps/oidc_login/js"
-      - "$PWD/lib:/var/www/html/custom_apps/oidc_login/lib"
-      - "$PWD/templates:/var/www/html/custom_apps/oidc_login/templates"
-      - "$PWD/COPYING:/var/www/html/custom_apps/oidc_login/COPYING"
-      - "$PWD/test.php:/var/www/html/custom_apps/oidc_login/test.php"
-      - "$PWD/webpack.config.js:/var/www/html/custom_apps/oidc_login/webpack.config.js"
+      #- "$PWD/docker/apps:/var/www/html/custom_apps"
+      - "$PWD:/var/www/html/apps/oidc_login"
       
