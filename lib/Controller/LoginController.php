@@ -23,6 +23,8 @@ use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 use OCA\OIDCLogin\Db\Token;
 use OCA\OIDCLogin\Db\TokenMapper;
+use OCA\OIDCLogin\Helper\PeHelper;
+use OCA\OIDCLogin\Helper\AnoncredHelper;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
@@ -34,6 +36,7 @@ use Endroid\QrCode\Writer\SvgWriter;
 
 use Jose\Component\Core\JWK;
 use Jose\Easy\Load;
+use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
 
 use function Safe\json_decode;
 
@@ -104,25 +107,18 @@ class LoginController extends Controller
         $nonce = strval(random_int(1000000000,9999999999)) . strval(random_int(1000000000,9999999999));
         $this->session['nonce'] = $nonce;
 
+        $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
+        $acHelper = new AnoncredHelper($schemaConfig);        
+        $schemaAttr = $acHelper->getSchemaAttributes();
         $claims = array(
-            'vp_token' => array(
-                'presentation_definition' => array(
-                    'input_descriptors' => array(
-                        array(
-                            'id' => 'ref1',
-                            'name' => 'proof_req_1',
-                            'schema' => array(
-                                array('uri' => 'did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1', 'required' => true),
-                            )
-                        ),
-                    ),
-                ),
+            'vp_token' => PresentationExchangeHelper::createPresentationDefinition(
+                $schemaConfig, $schemaAttr
             ),
         );
 
         $registration = array(
             'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array('ac_vp' => array('EdDSA', 'ES256K')),
+            'vp_formats' => array('ac_vp' => array()),
             'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
         );
 
@@ -276,54 +272,28 @@ class LoginController extends Controller
             throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
         }
 
+        $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
+        $acHelper = new AnoncredHelper($schemaConfig);
         
-        $proof = substr(str_replace('[{"format":"vp_ac","presentation":', '', $vpTokenRaw),0 , -2);
-
-        $libIndy = new LibIndy();
-
-        $configName = "idunion_test_ledger";
-        $config = '{"genesis_txn":"'.__DIR__.'/../LibIndyWrapper/genesis_txn.txt"}';
-        try {
-            $libIndy->createPoolLedgerConfig($configName, $config)->get();
-        } catch (LibIndyException $e) {
-            $libIndy->deletePoolLedgerConfig($configName)->get();
-            $libIndy->createPoolLedgerConfig($configName, $config)->get();
-        }
-
-        $poolHandle = $libIndy->openPoolLedger($configName)->get();
-
-        $schemaRequest = $libIndy->buildGetSchemaRequest("3QowxFtwciWceMFr7WbwnM", "did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1")->get();
-        $schemaResponseRaw = $libIndy->submitRequest($poolHandle, $schemaRequest)->get();
-        $schemaResponse = $libIndy->parseGetSchemaResponse($schemaResponseRaw)->get();
-
-
-        $credDefRequest = $libIndy->buildGetCredDefRequest("CsiDLAiFkQb9N4NDJKUagd", "CsiDLAiFkQb9N4NDJKUagd:3:CL:4687:NextcloudPrototypeCredentialWithoutRev")->get();
-        $credDefResponseRaw = $libIndy->submitRequest($poolHandle, $credDefRequest)->get();
-        $credDefResponse = $libIndy->parseGetCredDefResponse($credDefResponseRaw)->get();
-
-        $proofRequest = json_encode(array(
-            "nonce" => $nonce,
-            "name" => "proof_req_1",
-            "version" => "1.0",
-            "requested_attributes" => array(
-                "ref1" => array(
-                    "names" => array("first_name", "last_name", "email"),
-                    "restrictions" => array(array("schema_id" => $schemaResponse->getId()))
-                )
-            )
-        ));
+        
+        $schemaAttr = $acHelper->getSchemaAttributes();
+        $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
+        
+        $schemaResponse = $acHelper->getSchema();
         $schemas = json_encode(array(
             $schemaResponse->getId() => json_decode($schemaResponse->getJson())
         ));
+        $credDefResponse = $acHelper->getCredDef();
         $credentials = json_encode(array(
             $credDefResponse->getId() => json_decode($credDefResponse->getJson())
         ));
         
-        $valid = $libIndy->verifierVerifyProof($proofRequest, $proof, $schemas, $credentials, "{}", "{}")->get();
+        // TODO uncomment these lines if used with the Lissi App
+        /*$valid = $libIndy->verifierVerifyProof($proofRequest, $proof, $schemas, $credentials, "{}", "{}")->get();
         
         if (!$valid->isValid()) {
             throw new LoginException("Credential verification failed");
-        }
+        }*/
 
         // extract attributes from Anoncred Proof
         $vpToken = json_decode($vpTokenRaw, true);

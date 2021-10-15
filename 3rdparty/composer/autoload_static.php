@@ -114,6 +114,10 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         array (
             'phpseclib\\' => 10,
         ),
+        'U' => 
+        array (
+            'Utilities\\' => 10,
+        ),
         'S' => 
         array (
             'Symfony\\Polyfill\\Php81\\' => 23,
@@ -148,6 +152,7 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         ),
         'J' => 
         array (
+            'JsonPath\\' => 9,
             'Jose\\Component\\Signature\\Algorithm\\' => 35,
             'Jose\\Component\\Encryption\\Algorithm\\KeyEncryption\\' => 50,
             'Jose\\Component\\Encryption\\Algorithm\\ContentEncryption\\' => 54,
@@ -183,6 +188,10 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         'phpseclib\\' => 
         array (
             0 => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib',
+        ),
+        'Utilities\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/Utilities',
         ),
         'Symfony\\Polyfill\\Php81\\' => 
         array (
@@ -290,6 +299,10 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'JsonPath\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath',
         ),
         'Jose\\Component\\Signature\\Algorithm\\' => 
         array (
@@ -903,6 +916,22 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         'Jose\\Easy\\ParameterBag' => __DIR__ . '/..' . '/web-token/jwt-framework/src/Easy/ParameterBag.php',
         'Jose\\Easy\\Validate' => __DIR__ . '/..' . '/web-token/jwt-framework/src/Easy/Validate.php',
         'JsonException' => __DIR__ . '/..' . '/symfony/polyfill-php73/Resources/stubs/JsonException.php',
+        'JsonPath\\Expression\\ArrayInterval' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/ArrayInterval.php',
+        'JsonPath\\Expression\\BooleanExpression' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/BooleanExpression.php',
+        'JsonPath\\Expression\\ChildNameList' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/ChildNameList.php',
+        'JsonPath\\Expression\\Comparison' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/Comparison.php',
+        'JsonPath\\Expression\\IndexList' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/IndexList.php',
+        'JsonPath\\Expression\\Value' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Expression/Value.php',
+        'JsonPath\\InvalidJsonException' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/InvalidJsonException.php',
+        'JsonPath\\InvalidJsonPathException' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/InvalidJsonPathException.php',
+        'JsonPath\\JsonObject' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/JsonObject.php',
+        'JsonPath\\JsonPath' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/JsonPath.php',
+        'JsonPath\\Language\\ChildSelector' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Language/ChildSelector.php',
+        'JsonPath\\Language\\Regex' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Language/Regex.php',
+        'JsonPath\\Language\\Token' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Language/Token.php',
+        'JsonPath\\Operation\\GetChild' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Operation/GetChild.php',
+        'JsonPath\\Operation\\GetRecursive' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Operation/GetRecursive.php',
+        'JsonPath\\Operation\\SelectChildren' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/JsonPath/Operation/SelectChildren.php',
         'Jumbojett\\OpenIDConnectClient' => __DIR__ . '/..' . '/jumbojett/openid-connect-php/src/OpenIDConnectClient.php',
         'Jumbojett\\OpenIDConnectClientException' => __DIR__ . '/..' . '/jumbojett/openid-connect-php/src/OpenIDConnectClient.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
@@ -1759,6 +1788,7 @@ class ComposerStaticInit8794ca72eaf7440952b4a32961442321
         'Symfony\\Polyfill\\Php80\\Php80' => __DIR__ . '/..' . '/symfony/polyfill-php80/Php80.php',
         'Symfony\\Polyfill\\Php81\\Php81' => __DIR__ . '/..' . '/symfony/polyfill-php81/Php81.php',
         'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
+        'Utilities\\ArraySlice' => __DIR__ . '/..' . '/galbar/jsonpath/src/Galbar/Utilities/ArraySlice.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
         'phpseclib\\Crypt\\AES' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/Crypt/AES.php',
         'phpseclib\\Crypt\\Base' => __DIR__ . '/..' . '/phpseclib/phpseclib/phpseclib/Crypt/Base.php',

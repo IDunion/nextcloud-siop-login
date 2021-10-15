@@ -7,6 +7,7 @@ $baseDir = $vendorDir;
 
 return array(
     'phpseclib\\' => array($vendorDir . '/phpseclib/phpseclib/phpseclib'),
+    'Utilities\\' => array($vendorDir . '/galbar/jsonpath/src/Galbar/Utilities'),
     'Symfony\\Polyfill\\Php81\\' => array($vendorDir . '/symfony/polyfill-php81'),
     'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
     'Symfony\\Polyfill\\Php73\\' => array($vendorDir . '/symfony/polyfill-php73'),
@@ -33,6 +34,7 @@ return array(
     'Psr\\Http\\Client\\' => array($vendorDir . '/psr/http-client/src'),
     'Psr\\EventDispatcher\\' => array($vendorDir . '/psr/event-dispatcher/src'),
     'Psr\\Container\\' => array($vendorDir . '/psr/container/src'),
+    'JsonPath\\' => array($vendorDir . '/galbar/jsonpath/src/Galbar/JsonPath'),
     'Jose\\Component\\Signature\\Algorithm\\' => array($vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/ECDSA', $vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/EdDSA', $vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/HMAC', $vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/None', $vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/RSA', $vendorDir . '/web-token/jwt-framework/src/SignatureAlgorithm/Experimental'),
     'Jose\\Component\\Encryption\\Algorithm\\KeyEncryption\\' => array($vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/AESGCMKW', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/AESKW', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/Direct', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/ECDHES', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/PBES2', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/KeyEncryption/RSA'),
     'Jose\\Component\\Encryption\\Algorithm\\ContentEncryption\\' => array($vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/ContentEncryption/AESGCM', $vendorDir . '/web-token/jwt-framework/src/EncryptionAlgorithm/ContentEncryption/AESCBC'),
