@@ -2,6 +2,9 @@
 
 namespace OCA\OIDCLogin\Helper;
 
+use Exception;
+use JsonPath\JsonObject;
+
 class PresentationExchangeHelper {
     private const SCHEMA_REQUIRED = true;
     private const PRESENTATION_DEFINITION_ID = 'NextcloudLogin';
@@ -68,5 +71,17 @@ class PresentationExchangeHelper {
                 "requested_attributes" => $requestedAttributes0 
             )
         );
+    }
+
+    public static function parsePresentationSubmission(array $presentationSubmission): string {
+        $jsonSub = new JsonObject($presentationSubmission, true);
+        if ($jsonSub->get('$.presentation_submission.definition_id') 
+                != PresentationExchangeHelper::PRESENTATION_DEFINITION_ID) {
+            throw new Exception('Presentation submission contains wrong "definition_id"');
+        }
+        if ($jsonSub->get('$.presentation_submission.descriptor_map[0].format') != 'ac_vp') {
+            throw new Exception('Wrong credential format');
+        }
+        return $jsonSub->get('$.presentation_submission.descriptor_map[0].path_nested.path');
     }
 }

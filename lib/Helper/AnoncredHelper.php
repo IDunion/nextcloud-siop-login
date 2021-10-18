@@ -9,11 +9,12 @@ use JsonPath\JsonObject;
 use OCA\OIDCLogin\LibIndyWrapper\ParseResponseResult;
 
 class AnoncredHelper {
-    private $credDefId;
+    private $credDefHelper;
     private $schemaHelper;
     private $libIndy;
     private $poolHandle;
     private $schema;
+    private $credentialPath;
 
     function __construct($schemaConfig) {
         $this->schemaHelper = new SchemaHelper($schemaConfig);
@@ -31,23 +32,18 @@ class AnoncredHelper {
         $this->poolHandle = $this->libIndy->openPoolLedger($configName)->get();
     }
 
-    public function parseProof(string $anoncredProof) {
-        $jsonProof = new JsonObject($anoncredProof, true);
-        $this->credDefId = $jsonProof->get('$.identifiers[0].cred_def_id');
+    public function parseProof(array $presentationSubmission, string $vpToken) {
+        $jsonProof = new JsonObject($vpToken, true);
+        $credDefId = $jsonProof->get('$.identifiers[0].cred_def_id');
+        $this->credDefHelper = new CredDefHelper($credDefId);
+        $this->credentialPath = PresentationExchangeHelper::parsePresentationSubmission($presentationSubmission);
     }
 
     public function getCredDef(): ParseResponseResult {
+        // TODO get DID and ID from CredDefHelper
         $credDefRequest = $this->libIndy->buildGetCredDefRequest("CsiDLAiFkQb9N4NDJKUagd", "CsiDLAiFkQb9N4NDJKUagd:3:CL:4687:NextcloudPrototypeCredentialWithoutRev")->get();
         $credDefResponseRaw = $this->libIndy->submitRequest($this->poolHandle, $credDefRequest)->get();
         return $this->libIndy->parseGetCredDefResponse($credDefResponseRaw)->get();
-    }
-
-    /**
-     * Get the value of credDefId
-     */
-    public function getCredDefId()
-    {
-        return $this->credDefId;
     }
 
     public function getSchema(): ParseResponseResult {
@@ -66,6 +62,17 @@ class AnoncredHelper {
         $schema = $this->getSchema();
         $jsonSchema = new JsonObject($schema->getJson(), true);
         return $jsonSchema->get('$.attrNames');
+    }
+
+    public function getAttributesFromProof(string $vpToken): array {
+        $jsonVP = new JsonObject($vpToken, true);
+        $result = array();
+        foreach ($this->getSchemaAttributes() as $attr) {
+            if (in_array($attr, $this->schemaHelper->getSchemaDesiredAttr())) {
+                $result[$attr] = $jsonVP->get($this->credentialPath.'.values.'.$attr.'.raw');
+            }
+        }
+        return $result;
     }
 
 }

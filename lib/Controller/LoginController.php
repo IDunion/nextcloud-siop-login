@@ -139,9 +139,9 @@ class LoginController extends Controller
             ->writer(new SvgWriter())
             ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
             ->data($arUrlPost)
-            ->encoding(new Encoding('UTF-8'))
+            ->encoding(new Encoding('ISO-8859-1'))
             ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(500)
+            ->size(600)
             ->margin(0)
             ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
             ->build();
@@ -274,7 +274,7 @@ class LoginController extends Controller
 
         $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
-        
+        $acHelper->parseProof($idToken->claims->get('_vp_token_'), $vpTokenRaw);
         
         $schemaAttr = $acHelper->getSchemaAttributes();
         $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
@@ -295,18 +295,8 @@ class LoginController extends Controller
             throw new LoginException("Credential verification failed");
         }*/
 
-        // extract attributes from Anoncred Proof
-        $vpToken = json_decode($vpTokenRaw, true);
-        $firstName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['first_name']['raw'];
-        $lastName = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['last_name']['raw'];
-        $email = $vpToken[0]['presentation']['requested_proof']['revealed_attr_groups']['ref1']['values']['email']['raw'];
-
-        // build array with user data for the login process
-        $profile = array(
-            "sub" => $email,
-            "email" => $email,
-            "name" => $firstName . " " . $lastName,
-        );
+        // get attributes from proof
+        $profile = $acHelper->getAttributesFromProof($vpTokenRaw);
 
         // after successful verification save the tokens in the database or update the entry
         if (empty($tokens)) {
@@ -346,6 +336,14 @@ class LoginController extends Controller
             'groups' => 'ownCloudGroups',
         );
         $attr = array_merge($defattr, $confattr);
+
+        $joinAttr = $this->config->getSystemValue('oidc_login_join_attributes', array());
+        foreach ($joinAttr as $key => $values) {
+            $profile[$key] = '';
+            foreach ($values as $v) {
+                $profile[$key] = $profile[$key] . ' ' . $profile[$v];
+            }
+        }
 
         // Flatten the profile array
         $profile = $this->flatten($profile);
