@@ -15,7 +15,7 @@ function doPolling(pollingUri, callbackUri) {
         if (!data["finished"]) {
             setTimeout(doPolling, 1000, pollingUri, callbackUri);
         } else {
-            window.location.replace(callbackUri + "?from_file=true");
+            window.location.replace(callbackUri);
         }
     })
 }

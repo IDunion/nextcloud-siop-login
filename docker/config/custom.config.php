@@ -28,10 +28,20 @@ $CONFIG = array (
   'oidc_login_hide_password_form' => false,
   'oidc_login_attributes' => 
     array (
-        'mail' => 'email',
+        'id' => 'email',
     ),
+  'oidc_login_join_attributes' =>
+    array(
+      'name' => array('first_name', 'last_name'),
+  ),
+  'oidc_login_schema_config' => array(
+    'did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1' => array(
+      'first_name', 'last_name', 'email'
+    ),
+  ),
   'oidc_create_groups' => true,
   'oidc_login_disable_registration' => false,
   'oidc_login_tls_verify' => true,
   'oidc_login_code_challenge_method' => 'S256',
+  'debug' => true,
 );
