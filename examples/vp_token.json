@@ -6,10 +6,10 @@
             "descriptor_map": [
                 {
                     "id": "ref1",
-                    "format": "ldp_ac",
-                    "path": "$.presentation",
+                    "format": "ac_vp",
+                    "path": "$",
                     "path_nested": {
-                        "format": "ldp_ac",
+                        "format": "ac_vp",
                         "path": "$.requested_proof.revealed_attr_groups.ref1"
                     }
                 }

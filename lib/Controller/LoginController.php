@@ -275,6 +275,9 @@ class LoginController extends Controller
         $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
         $acHelper->parseProof($idToken->claims->get('_vp_token'), $vpTokenRaw);
+        if(!$acHelper->verifyAttributes($vpTokenRaw)) {
+            throw new LoginException('The credential attributes have been manipulated');
+        }
         
         $schemaAttr = $acHelper->getSchemaAttributes();
         $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);

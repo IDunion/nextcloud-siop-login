@@ -67,7 +67,7 @@ class PresentationExchangeHelper {
             array(
                 "nonce" => $nonce,
                 "name" => PresentationExchangeHelper::PRESENTATION_DEFINITION_ID,
-                "version" => $schemaHelper->getSchemaVersion(),
+                "version" => "1.0",
                 "requested_attributes" => $requestedAttributes0 
             )
         );

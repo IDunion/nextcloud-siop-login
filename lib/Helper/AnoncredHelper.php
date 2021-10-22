@@ -75,4 +75,31 @@ class AnoncredHelper {
         return $result;
     }
 
+    function getEncoding($value) {
+        if(empty($value)) {
+            $value = '';
+        } elseif(is_integer($value)) {
+            $value = strval($value);
+        }
+    
+        $hex = hash('sha256', utf8_encode($value), false);
+        $bigInt = gmp_init($hex, 16);
+        return gmp_strval($bigInt);
+    }
+
+    public function verifyAttributes(string $vpToken): bool {
+        $jsonVP = new JsonObject($vpToken, true);
+        foreach ($this->getSchemaAttributes() as $attr) {
+            if (in_array($attr, $this->schemaHelper->getSchemaDesiredAttr())) {
+                $attrRaw = $jsonVP->get($this->credentialPath.'.values.'.$attr.'.raw');
+                $attrEncoded = $jsonVP->get($this->credentialPath.'.values.'.$attr.'.encoded');
+                $attrEncodedProof = $jsonVP->get('$.proof.proofs[0].primary_proof.eq_proof.revealed_attrs.'.$attr);
+                if($this->getEncoding($attrRaw) != $attrEncoded || $this->getEncoding($attrRaw) != $attrEncodedProof) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }
