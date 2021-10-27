@@ -8,7 +8,8 @@ use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 use JsonPath\JsonObject;
 use OCA\OIDCLogin\LibIndyWrapper\ParseResponseResult;
 
-class AnoncredHelper {
+class AnoncredHelper
+{
     private $credDefHelper;
     private $schemaHelper;
     private $libIndy;
@@ -16,7 +17,8 @@ class AnoncredHelper {
     private $schema;
     private $credentialPath;
 
-    function __construct($schemaConfig) {
+    public function __construct($schemaConfig)
+    {
         $this->schemaHelper = new SchemaHelper($schemaConfig);
         $this->libIndy = new LibIndy();
 
@@ -32,22 +34,25 @@ class AnoncredHelper {
         $this->poolHandle = $this->libIndy->openPoolLedger($configName)->get();
     }
 
-    public function parseProof(array $presentationSubmission, string $vpToken) {
+    public function parseProof(array $presentationSubmission, string $vpToken)
+    {
         $jsonProof = new JsonObject($vpToken, true);
         $credDefId = $jsonProof->get('$.identifiers[0].cred_def_id');
         $this->credDefHelper = new CredDefHelper($credDefId);
         $this->credentialPath = PresentationExchangeHelper::parsePresentationSubmission($presentationSubmission);
     }
 
-    public function getCredDef(): ParseResponseResult {
+    public function getCredDef(): ParseResponseResult
+    {
         // TODO get DID and ID from CredDefHelper
         $credDefRequest = $this->libIndy->buildGetCredDefRequest("CsiDLAiFkQb9N4NDJKUagd", "CsiDLAiFkQb9N4NDJKUagd:3:CL:4687:NextcloudPrototypeCredentialWithoutRev")->get();
         $credDefResponseRaw = $this->libIndy->submitRequest($this->poolHandle, $credDefRequest)->get();
         return $this->libIndy->parseGetCredDefResponse($credDefResponseRaw)->get();
     }
 
-    public function getSchema(): ParseResponseResult {
-        if(empty($this->schema)) {
+    public function getSchema(): ParseResponseResult
+    {
+        if (empty($this->schema)) {
             $schemaRequest = $this->libIndy->buildGetSchemaRequest(
                 $this->schemaHelper->getSchemaDID(),
                 $this->schemaHelper->getSchemaIdForIndy()
@@ -58,13 +63,15 @@ class AnoncredHelper {
         return $this->schema;
     }
 
-    public function getSchemaAttributes(): array {
+    public function getSchemaAttributes(): array
+    {
         $schema = $this->getSchema();
         $jsonSchema = new JsonObject($schema->getJson(), true);
         return $jsonSchema->get('$.attrNames');
     }
 
-    public function getAttributesFromProof(string $vpToken): array {
+    public function getAttributesFromProof(string $vpToken): array
+    {
         $jsonVP = new JsonObject($vpToken, true);
         $result = array();
         foreach ($this->getSchemaAttributes() as $attr) {
@@ -75,10 +82,11 @@ class AnoncredHelper {
         return $result;
     }
 
-    function getEncoding($value) {
-        if(empty($value)) {
+    public function getEncoding($value)
+    {
+        if (empty($value)) {
             $value = '';
-        } elseif(is_integer($value)) {
+        } elseif (is_integer($value)) {
             $value = strval($value);
         }
     
@@ -87,19 +95,19 @@ class AnoncredHelper {
         return gmp_strval($bigInt);
     }
 
-    public function verifyAttributes(string $vpToken): bool {
+    public function verifyAttributes(string $vpToken): bool
+    {
         $jsonVP = new JsonObject($vpToken, true);
         foreach ($this->getSchemaAttributes() as $attr) {
             if (in_array($attr, $this->schemaHelper->getSchemaDesiredAttr())) {
                 $attrRaw = $jsonVP->get($this->credentialPath.'.values.'.$attr.'.raw');
                 $attrEncoded = $jsonVP->get($this->credentialPath.'.values.'.$attr.'.encoded');
                 $attrEncodedProof = $jsonVP->get('$.proof.proofs[0].primary_proof.eq_proof.revealed_attrs.'.$attr);
-                if($this->getEncoding($attrRaw) != $attrEncoded || $this->getEncoding($attrRaw) != $attrEncodedProof) {
+                if ($this->getEncoding($attrRaw) != $attrEncoded || $this->getEncoding($attrRaw) != $attrEncodedProof) {
                     return false;
                 }
             }
         }
         return true;
     }
-
 }

@@ -19,12 +19,17 @@ use OC\User\LoginException;
 use OC\Authentication\Token\DefaultTokenProvider;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataResponse;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 use OCA\OIDCLogin\Db\Token;
 use OCA\OIDCLogin\Db\TokenMapper;
+use OCA\OIDCLogin\Db\RequestObject;
+use OCA\OIDCLogin\Db\RequestObjectMapper;
 use OCA\OIDCLogin\Helper\PeHelper;
 use OCA\OIDCLogin\Helper\AnoncredHelper;
+use OCA\OIDCLogin\Helper\AuthenticationRequest;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
@@ -37,6 +42,12 @@ use Endroid\QrCode\Writer\SvgWriter;
 use Jose\Component\Core\JWK;
 use Jose\Easy\Load;
 use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
+use Jose\Component\KeyManagement\JWKFactory;
+use Jose\Easy\Build;
+use Jose\Component\Signature\Algorithm\None;
+use Jose\Component\Core\AlgorithmManager;
+use Jose\Component\Signature\JWSBuilder;
+use Jose\Component\Signature\Serializer\CompactSerializer;
 
 use function Safe\json_decode;
 
@@ -74,6 +85,7 @@ class LoginController extends Controller
         IL10N $l,
         IAppData $appData,
         TokenMapper $tokenMapper,
+        RequestObjectMapper $requestObjectMapper,
         ITimeFactory $timeFactory,
         $storagesService
     ) {
@@ -87,6 +99,7 @@ class LoginController extends Controller
         $this->l = $l;
         $this->appData = $appData;
         $this->tokenMapper = $tokenMapper;
+        $this->requestObjectMapper = $requestObjectMapper;
         $this->timeFactory = $timeFactory;
         $this->storagesService = $storagesService;
     }
@@ -101,41 +114,22 @@ class LoginController extends Controller
         if ($redirectUrl = $this->request->getParam('login_redirect_url')) {
             $this->session->set('login_redirect_url', $redirectUrl);
         }
-
-        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
-        $redirectUriPost = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
-        $nonce = strval(random_int(1000000000,9999999999)) . strval(random_int(1000000000,9999999999));
+        
+        $nonce = strval(random_int(1000000000, 9999999999)) . strval(random_int(1000000000, 9999999999));
         $this->session['nonce'] = $nonce;
 
-        $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
-        $acHelper = new AnoncredHelper($schemaConfig);        
-        $schemaAttr = $acHelper->getSchemaAttributes();
-        $claims = array(
-            'vp_token' => PresentationExchangeHelper::createPresentationDefinition(
-                $schemaConfig, $schemaAttr
-            ),
+        $ar = new AuthenticationRequest(
+            $this->appName,
+            $this->urlGenerator,
+            $this->timeFactory,
+            $this->config,
+            $this->requestObjectMapper,
+            $nonce
         );
 
-        $registration = array(
-            'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array('ac_vp' => array()),
-            'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
-        );
+        $arUrlPost = $ar->createCrossDevice();
 
-        $arPost = array(
-            'response_type' => 'id_token',
-            'response_mode' => 'post',
-            'client_id' => $redirectUriPost,
-            'redirect_uri' => $redirectUriPost,
-            'scope' => 'openid',
-            'claims' => json_encode($claims),
-            'nonce' => $nonce,
-            'registration' => json_encode($registration)
-        );
-
-        $arUrlPost = "openid://?" . http_build_query($arPost);
-
-        $result = Builder::create()
+        $arUrlAsQrCode = Builder::create()
             ->writer(new SvgWriter())
             ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
             ->data($arUrlPost)
@@ -144,33 +138,39 @@ class LoginController extends Controller
             ->size(600)
             ->margin(0)
             ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-            ->build();
-        $dataUri = $result->getDataUri();
+            ->build()
+            ->getDataUri();
 
-        $ar = array(
-            'response_type' => 'id_token',
-            'client_id' => $redirectUri,
-            'redirect_uri' => $redirectUri,
-            'scope' => 'openid',
-            'claims' => json_encode($claims),
-            'nonce' => $nonce,
-            'registration' => json_encode($registration)
-        );
-
-        $arUrl = "openid://?" . http_build_query($ar);
+        $arUrl = $ar->createOnDevice();
         
         $params = array(
-            'qr' => $dataUri,
+            'qr' => $arUrlAsQrCode,
             'arPost' => $arUrlPost,
             'ar' => $arUrl,
             'pollingUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.polling'),
-            'callbackUri' => $redirectUri,
+            'callbackUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback'),
         );
 
         return new TemplateResponse('oidc_login', 'AuthorizationRequest', $params);
     }
 
-    private function saveTokens(string $idTokenRaw, string $vpTokenRaw, bool $used) {
+    /**
+     * @PublicPage
+     * @NoCSRFRequired
+     */
+    public function requestObject($id)
+    {
+        $requestUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.requestObject', array('id' => $id));
+        
+        try {
+            return new DataResponse($this->requestObjectMapper->find($requestUri)->getRequestObject());
+        } catch (DoesNotExistException $e) {
+            return new DataResponse([], Http::STATUS_NOT_FOUND);
+        }
+    }
+
+    private function saveTokens(string $idTokenRaw, string $vpTokenRaw, bool $used)
+    {
         // extract nonce from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
         $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
@@ -189,7 +189,8 @@ class LoginController extends Controller
         return null;
     }
 
-    private function getTokens($nonce) {
+    private function getTokens($nonce)
+    {
         try {
             return $this->tokenMapper->find($nonce);
         } catch (DoesNotExistException $e) {
@@ -201,7 +202,8 @@ class LoginController extends Controller
      * @PublicPage
      * @NoCSRFRequired
      */
-    public function backend($id_token, $vp_token) {
+    public function backend($id_token, $vp_token)
+    {
         $this->saveTokens($id_token, $vp_token, false);
     }
 
@@ -209,13 +211,14 @@ class LoginController extends Controller
      * @PublicPage
      * @NoCSRFRequired
      */
-    public function polling() {
+    public function polling()
+    {
         $nonce = $this->session['nonce'];
         $tokens = $this->getTokens($nonce);
         if (empty($tokens)) {
-            return new JSONResponse(array('finished' => FALSE));
+            return new JSONResponse(array('finished' => false));
         }
-        return new JSONResponse(array('finished' => TRUE));
+        return new JSONResponse(array('finished' => true));
     }
 
     /**
@@ -223,7 +226,8 @@ class LoginController extends Controller
      * @NoCSRFRequired
      * @UseSession
      */
-    public function callback($id_token='', $vp_token='') {
+    public function callback($id_token='', $vp_token='')
+    {
         $nonceFromSession = $this->session['nonce'];
              
         // check if we have tokens for this session in the database
@@ -259,8 +263,8 @@ class LoginController extends Controller
             ->aud($redirectUri)
             ->iss('https://self-issued.me/v2')
             ->sub($jwk->thumbprint('sha256'))
-            ->exp()    
-            ->iat()    
+            ->exp()
+            ->iat()
             ->nbf()
             ->key($jwk)
             ->run();
@@ -275,7 +279,7 @@ class LoginController extends Controller
         $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
         $acHelper->parseProof($idToken->claims->get('_vp_token'), $vpTokenRaw);
-        if(!$acHelper->verifyAttributes($vpTokenRaw)) {
+        if (!$acHelper->verifyAttributes($vpTokenRaw)) {
             throw new LoginException('The credential attributes have been manipulated');
         }
         
@@ -293,7 +297,7 @@ class LoginController extends Controller
         
         // TODO uncomment these lines if used with the Lissi App
         /*$valid = $libIndy->verifierVerifyProof($proofRequest, $proof, $schemas, $credentials, "{}", "{}")->get();
-        
+
         if (!$valid->isValid()) {
             throw new LoginException("Credential verification failed");
         }*/
@@ -363,7 +367,7 @@ class LoginController extends Controller
             }
 
             // Get the LDAP user backend
-            $ldap = NULL;
+            $ldap = null;
             foreach ($this->userManager->getBackends() as $backend) {
                 if ($backend->getBackendName() == $this->config->getSystemValue('oidc_login_ldap_backend', "LDAP")) {
                     $ldap = $backend;
@@ -371,7 +375,7 @@ class LoginController extends Controller
             }
 
             // Check if backend found
-            if ($ldap == NULL) {
+            if ($ldap == null) {
                 throw new LoginException($this->l->t('No LDAP user backend found!'));
             }
 
@@ -387,7 +391,7 @@ class LoginController extends Controller
 
             // Store the user
             $ldapUser = $access->userManager->get($dn);
-            if ($ldapUser == NULL) {
+            if ($ldapUser == null) {
                 throw new LoginException($this->l->t('Error getting user from LDAP'));
             }
 
@@ -440,7 +444,7 @@ class LoginController extends Controller
             // Get intended home directory
             $home = $profile[$attr['home']];
 
-            if($this->config->getSystemValue('oidc_login_use_external_storage', false)) {
+            if ($this->config->getSystemValue('oidc_login_use_external_storage', false)) {
                 // Check if the files external app is enabled and injected
                 if ($this->storagesService === null) {
                     throw new LoginException($this->l->t('files_external app must be enabled to use oidc_login_use_external_storage'));
@@ -454,12 +458,12 @@ class LoginController extends Controller
                         count($storage->getApplicableUsers() == 1); // It can't be shared with other users
                 });
 
-                if(!empty($storages)) {
+                if (!empty($storages)) {
                     // User had storage on their / so make sure it's the correct folder
                     $storage = array_values($storages)[0];
                     $options = $storage->getBackendOptions();
 
-                    if($options['datadir'] != $home) {
+                    if ($options['datadir'] != $home) {
                         $options['datadir'] = $home;
                         $storage->setBackendOptions($options);
                         $this->storagesService->updateStorage($storage);
@@ -610,7 +614,8 @@ class LoginController extends Controller
         return $this->redirectToMainPage();
     }
 
-    private function redirectToMainPage() {
+    private function redirectToMainPage()
+    {
         // Go to redirection URI
         if ($redirectUrl = $this->session->get('login_redirect_url')) {
             return new RedirectResponse($redirectUrl);
@@ -625,9 +630,10 @@ class LoginController extends Controller
         return new RedirectResponse($this->urlGenerator->getAbsoluteURL($redir));
     }
 
-    private function flatten($array, $prefix = '') {
+    private function flatten($array, $prefix = '')
+    {
         $result = array();
-        foreach($array as $key => $value) {
+        foreach ($array as $key => $value) {
             $result[$prefix . $key] = $value;
             if (is_array($value)) {
                 $result = $result + $this->flatten($value, $prefix . $key . '_');

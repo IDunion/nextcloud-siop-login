@@ -13,5 +13,6 @@ return [
         ['name' => 'login#callback', 'url' => '/oidc/callback', 'verb' => 'GET'],
         ['name' => 'login#backend', 'url' => '/oidc/backend', 'verb' => 'POST'],
         ['name' => 'login#polling', 'url' => '/oidc/polling', 'verb' => 'GET'],
+        ['name' => 'login#requestObject', 'url' => '/oidc/requestobject/{id}', 'verb' => 'GET'],
     ]
 ];
