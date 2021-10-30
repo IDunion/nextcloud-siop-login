@@ -20,7 +20,7 @@ use OC\Authentication\Token\DefaultTokenProvider;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\TextPlainResponse;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 use OCA\OIDCLogin\Db\Token;
@@ -163,9 +163,10 @@ class LoginController extends Controller
         $requestUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.requestObject', array('id' => $id));
         
         try {
-            return new DataResponse($this->requestObjectMapper->find($requestUri)->getRequestObject());
+            $requestObject = $this->requestObjectMapper->find($requestUri)->getRequestObject();
+            return new TextPlainResponse($requestObject, Http::STATUS_OK);
         } catch (DoesNotExistException $e) {
-            return new DataResponse([], Http::STATUS_NOT_FOUND);
+            return new TextPlainResponse('', Http::STATUS_NOT_FOUND);
         }
     }
 

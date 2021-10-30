@@ -43,7 +43,7 @@ class AuthenticationRequest
 
         $this->registration = array(
             'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array('ac_vp' => array()),
+            'vp_formats' => array('ac_vp' => null),
             'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
         );
     }
