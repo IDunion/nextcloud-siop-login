@@ -22,6 +22,9 @@ class AnoncredHelper
         $this->schemaHelper = new SchemaHelper($schemaConfig);
         $this->libIndy = new LibIndy();
 
+        // for debugging only
+        //$this->libIndy->setDefaultLogger("trace");
+
         $configName = "idunion_test_ledger";
         $config = '{"genesis_txn":"'.__DIR__.'/../LibIndyWrapper/genesis_txn.txt"}';
         try {
@@ -32,6 +35,11 @@ class AnoncredHelper
         }
 
         $this->poolHandle = $this->libIndy->openPoolLedger($configName)->get();
+    }
+
+    public function close()
+    {
+        $this->libIndy->closePoolLedger($this->poolHandle)->get();
     }
 
     public function parseProof(array $presentationSubmission, string $vpToken)

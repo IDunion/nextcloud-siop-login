@@ -34,6 +34,7 @@ class AuthenticationRequest
         $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
         $schemaAttr = $acHelper->getSchemaAttributes();
+        $acHelper->close();
         $this->claims = array(
             'vp_token' => PresentationExchangeHelper::createPresentationDefinition(
                 $schemaConfig,

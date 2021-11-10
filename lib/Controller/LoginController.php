@@ -135,7 +135,7 @@ class LoginController extends Controller
             ->data($arUrlPost)
             ->encoding(new Encoding('ISO-8859-1'))
             ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(600)
+            ->size(300)
             ->margin(0)
             ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
             ->build()
@@ -215,11 +215,13 @@ class LoginController extends Controller
     public function polling()
     {
         $nonce = $this->session['nonce'];
-        $tokens = $this->getTokens($nonce);
-        if (empty($tokens)) {
-            return new JSONResponse(array('finished' => false));
+        if (!is_null($nonce)) {
+            $tokens = $this->getTokens($nonce);
+            if (!empty($tokens)) {
+                return new JSONResponse(array('finished' => true));
+            }
         }
-        return new JSONResponse(array('finished' => true));
+        return new JSONResponse(array('finished' => false));
     }
 
     /**
@@ -305,6 +307,8 @@ class LoginController extends Controller
 
         // get attributes from proof
         $profile = $acHelper->getAttributesFromProof($vpTokenRaw);
+
+        $acHelper->close();
 
         // after successful verification save the tokens in the database or update the entry
         if (empty($tokens)) {

@@ -2,15 +2,14 @@
 
 namespace OCA\OIDCLogin\LibIndyWrapper;
 
-class LibIndy {
-    private $ffi;
+final class LibIndy {
+    private static $ffi = null;
 
     function __construct() {
-        $this->ffi = $this->getFFI();
-    }
-
-    private function getFFI() {
-        return \FFI::load(__DIR__ . "/indy.h");
+        if (is_null(self::$ffi)) {
+            self::$ffi = \FFI::load(__DIR__ . "/indy.h");
+            //self::$ffi = \FFI::scope("LIB_INDY");
+        }
     }
 
     private function parseResponseCb(int $command_handle, int $err, string $id, string $schema_json) {       
@@ -21,7 +20,7 @@ class LibIndy {
 
     public function createSchema(string $did, string $name, string $version, string $attr) {       
         $future = new Future(1);
-        $result = $this->ffi->indy_issuer_create_schema($future->getQueueKey(), $did, $name, $version, $attr, [__CLASS__, "parseResponseCb"]);
+        $result = self::$ffi->indy_issuer_create_schema($future->getQueueKey(), $did, $name, $version, $attr, [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -41,7 +40,7 @@ class LibIndy {
      */
     public function createPoolLedgerConfig(string $configName, ?string $config) {
         $future = new Future(3);
-        $result = $this->ffi->indy_create_pool_ledger_config($future->getQueueKey(), $configName, $config,  [__CLASS__, "voidCb"]);
+        $result = self::$ffi->indy_create_pool_ledger_config($future->getQueueKey(), $configName, $config,  [__CLASS__, "voidCb"]);
     
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -52,7 +51,18 @@ class LibIndy {
 
     public function deletePoolLedgerConfig(string $configName) {
         $future = new Future(3);
-        $result = $this->ffi->indy_delete_pool_ledger_config($future->getQueueKey(), $configName, [__CLASS__, "voidCb"]);
+        $result = self::$ffi->indy_delete_pool_ledger_config($future->getQueueKey(), $configName, [__CLASS__, "voidCb"]);
+    
+        if ($result != 0) {
+            throw new LibIndyException(NULL, $result);
+        }
+
+        return $future;
+    }
+
+    public function closePoolLedger(PoolOpenResult $pool) {
+        $future = new Future(3);
+        $result = self::$ffi->indy_close_pool_ledger($future->getQueueKey(), $pool->getPoolHandle(), [__CLASS__, "voidCb"]);
     
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -68,7 +78,7 @@ class LibIndy {
 
     public function openPoolLedger(string $configName, string $config = NULL) {
         $future = new Future(4);
-        $result = $this->ffi->indy_open_pool_ledger($future->getQueueKey(), $configName, $config, [__CLASS__, "openPoolCb"]);
+        $result = self::$ffi->indy_open_pool_ledger($future->getQueueKey(), $configName, $config, [__CLASS__, "openPoolCb"]);
         
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -84,7 +94,7 @@ class LibIndy {
 
     public function buildGetSchemaRequest(string $submitterDid, string $id) {
         $future = new Future(5);
-        $result = $this->ffi->indy_build_get_schema_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
+        $result = self::$ffi->indy_build_get_schema_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -95,7 +105,7 @@ class LibIndy {
 
     public function submitRequest(PoolOpenResult $pool, StringResult $requestObject) {
         $future = new Future(5);
-        $result = $this->ffi->indy_submit_request($future->getQueueKey(), $pool->getPoolHandle(), $requestObject->getJson(), [__CLASS__, "stringCb"]);
+        $result = self::$ffi->indy_submit_request($future->getQueueKey(), $pool->getPoolHandle(), $requestObject->getJson(), [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -106,7 +116,7 @@ class LibIndy {
 
     public function parseGetSchemaResponse(StringResult $getSchemaResponse) {
         $future = new Future(1);
-        $result = $this->ffi->indy_parse_get_schema_response($future->getQueueKey(), $getSchemaResponse->getJson(), [__CLASS__, "parseResponseCb"]);
+        $result = self::$ffi->indy_parse_get_schema_response($future->getQueueKey(), $getSchemaResponse->getJson(), [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -117,7 +127,7 @@ class LibIndy {
 
     public function buildGetCredDefRequest(string $submitterDid, string $id) {
         $future = new Future(5);
-        $result = $this->ffi->indy_build_get_cred_def_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
+        $result = self::$ffi->indy_build_get_cred_def_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -128,7 +138,7 @@ class LibIndy {
 
     public function parseGetCredDefResponse(StringResult $getCredDefResponse) {
         $future = new Future(1);
-        $result = $this->ffi->indy_parse_get_cred_def_response($future->getQueueKey(), $getCredDefResponse->getJson(), [__CLASS__, "parseResponseCb"]);
+        $result = self::$ffi->indy_parse_get_cred_def_response($future->getQueueKey(), $getCredDefResponse->getJson(), [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -144,7 +154,7 @@ class LibIndy {
 
     public function verifierVerifyProof($proofRequestJson, $proofJson, $schemasJson, $credentialDefsJsons, $revRegDefsJson, $revRegsJson) {
         $future = new Future(2);
-        $result = $this->ffi->indy_verifier_verify_proof($future->getQueueKey(), $proofRequestJson, $proofJson, $schemasJson, $credentialDefsJsons, $revRegDefsJson, $revRegsJson,  [__CLASS__, "verifyProofCb"]);
+        $result = self::$ffi->indy_verifier_verify_proof($future->getQueueKey(), $proofRequestJson, $proofJson, $schemasJson, $credentialDefsJsons, $revRegDefsJson, $revRegsJson,  [__CLASS__, "verifyProofCb"]);
     
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -157,7 +167,7 @@ class LibIndy {
      * @param string $pattern : e.g. "trace" to see all logs
      */
     public function setDefaultLogger(string $pattern) {
-        $result = $this->ffi->indy_set_default_logger($pattern);
+        $result = self::$ffi->indy_set_default_logger($pattern);
     
         if ($result != 0) {
             throw new LibIndyException(NULL, $result);
@@ -256,7 +266,7 @@ class Future {
      * if necessary for the result.
      */
     function get() {
-        \msg_receive($this->queue, $this->msg_type, $received_msg_type, 65536, $this->msg);
+        \msg_receive($this->queue, $this->msg_type, $received_msg_type, 131072, $this->msg);
         \msg_remove_queue($this->queue);
         if (!$this->msg->success()) {
             throw new LibIndyException(NULL, $this->msg->getError());

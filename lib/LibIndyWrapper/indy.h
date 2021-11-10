@@ -1,3 +1,4 @@
+#define FFI_SCOPE "LIB_INDY"
 #define FFI_LIB "libindy.so"
 
 typedef enum
@@ -224,6 +225,11 @@ extern indy_error_t indy_open_pool_ledger(indy_handle_t command_handle,
 
                                             void          (*cb)(indy_handle_t command_handle_, indy_error_t err, indy_handle_t pool_handle)
                                             );
+
+extern indy_error_t indy_close_pool_ledger(indy_handle_t command_handle,
+                                               indy_handle_t handle,
+                                               void          (*cb)(indy_handle_t command_handle_, indy_error_t err)
+                                               );
 
 // indy_ledger.h
 extern indy_error_t indy_build_get_schema_request(indy_handle_t command_handle,
