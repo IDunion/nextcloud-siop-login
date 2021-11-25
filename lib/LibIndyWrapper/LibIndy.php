@@ -266,7 +266,7 @@ class Future {
      * if necessary for the result.
      */
     function get() {
-        \msg_receive($this->queue, $this->msg_type, $received_msg_type, 131072, $this->msg);
+        \msg_receive($this->queue, $this->msg_type, $received_msg_type, 65536, $this->msg);
         \msg_remove_queue($this->queue);
         if (!$this->msg->success()) {
             throw new LibIndyException(NULL, $this->msg->getError());

@@ -52,16 +52,17 @@ class AuthenticationRequest
     public function createOnDevice(): string
     {
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
-        return $this->createAuthenticationRequest($redirectUri);
+        return $this->createAuthenticationRequest($redirectUri, false);
     }
 
     public function createCrossDevice(): string
     {
-        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
-        return $this->createAuthenticationRequest($redirectUri, 'post');
+        $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
+        $useRequestUri = $this->config->getSystemValue('oidc_login_use_request_uri', true);
+        return $this->createAuthenticationRequest($redirectUri, $useRequestUri, 'post');
     }
 
-    private function createAuthenticationRequest($redirectUri, $responseMode = null): string
+    private function createAuthenticationRequest($redirectUri, $useRequestUri, $responseMode = null): string
     {
         $arDataBase = array(
             'response_type' => 'id_token',
@@ -76,7 +77,7 @@ class AuthenticationRequest
         $arDataFull['redirect_uri'] = $redirectUri;
         $arDataFull['nonce'] = $this->nonce;
         
-        if ($this->config->getSystemValue('oidc_login_use_request_uri', true)) {
+        if ($useRequestUri) {
             $arDataFull['claims'] = $this->claims;
             $arDataFull['registration'] = $this->registration;
 

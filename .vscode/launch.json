@@ -10,7 +10,7 @@
             "request": "launch",
             "port": 9003,
             "pathMappings": {
-                "/var/www/html": "${workspaceFolder}/../../"
+                "/var/www/html/custom_apps/oidc_login": "${workspaceFolder}"
               }
         },
         {
@@ -24,7 +24,7 @@
                 "-dxdebug.start_with_request=yes"
             ],
             "env": {
-                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_MODE": "debug",
                 "XDEBUG_CONFIG": "client_port=${port}"
             }
         },

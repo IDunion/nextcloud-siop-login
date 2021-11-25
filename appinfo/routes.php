@@ -11,7 +11,7 @@ return [
     'routes' => [
         ['name' => 'login#oidc', 'url' => '/oidc', 'verb' => 'GET'],
         ['name' => 'login#callback', 'url' => '/oidc/callback', 'verb' => 'GET'],
-        ['name' => 'login#backend', 'url' => '/oidc/backend', 'verb' => 'POST'],
+        ['name' => 'login#backend', 'url' => '/oidc/callback', 'verb' => 'POST'],
         ['name' => 'login#polling', 'url' => '/oidc/polling', 'verb' => 'GET'],
         ['name' => 'login#requestObject', 'url' => '/oidc/requestobject/{id}', 'verb' => 'GET'],
     ]

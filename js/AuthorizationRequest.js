@@ -10,12 +10,10 @@ $(document).ready(function() {
 });
 
 function doPolling(pollingUri, callbackUri) {
-    $.get(pollingUri, function(data, status) {
-        console.log(data["finished"]);
-        if (!data["finished"]) {
-            setTimeout(doPolling, 1000, pollingUri, callbackUri);
-        } else {
+    $.get(pollingUri, function(data) {console.log(data["finished"]);
+        if (data["finished"]) {
             window.location.replace(callbackUri);
         }
-    })
+    });
+    setTimeout(doPolling, 1000, pollingUri, callbackUri);
 }

@@ -8,6 +8,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IAppData;
 use OCP\IL10N;
 use OCP\IRequest;
+use Psr\Log\LoggerInterface;
 use OCP\IConfig;
 use OCP\IUserSession;
 use OCP\IUserManager;
@@ -71,6 +72,8 @@ class LoginController extends Controller
     private $storagesService;
     /** @var IAppData */
     private $appData;
+    /** @var LoggerInterface */
+    private $logger;
 
 
     public function __construct(
@@ -87,6 +90,7 @@ class LoginController extends Controller
         TokenMapper $tokenMapper,
         RequestObjectMapper $requestObjectMapper,
         ITimeFactory $timeFactory,
+        LoggerInterface $logger,
         $storagesService
     ) {
         parent::__construct($appName, $request);
@@ -101,6 +105,7 @@ class LoginController extends Controller
         $this->tokenMapper = $tokenMapper;
         $this->requestObjectMapper = $requestObjectMapper;
         $this->timeFactory = $timeFactory;
+        $this->logger = $logger;
         $this->storagesService = $storagesService;
     }
 
@@ -113,6 +118,11 @@ class LoginController extends Controller
     {
         if ($redirectUrl = $this->request->getParam('login_redirect_url')) {
             $this->session->set('login_redirect_url', $redirectUrl);
+        }
+
+        // Redirect if already logged in
+        if ($this->userSession->isLoggedIn()) {
+            return $this->redirectToMainPage();
         }
         
         $nonce = strval(random_int(1000000000, 9999999999)) . strval(random_int(1000000000, 9999999999));
@@ -128,6 +138,7 @@ class LoginController extends Controller
         );
 
         $arUrlPost = $ar->createCrossDevice();
+        $this->logger->debug('Created cross-device authentication requests: '. $arUrlPost);
 
         $arUrlAsQrCode = Builder::create()
             ->writer(new SvgWriter())
@@ -142,6 +153,7 @@ class LoginController extends Controller
             ->getDataUri();
 
         $arUrl = $ar->createOnDevice();
+        $this->logger->debug('Created on-device authentication requests: '. $arUrl);
         
         $params = array(
             'qr' => $arUrlAsQrCode,
@@ -164,8 +176,10 @@ class LoginController extends Controller
         
         try {
             $requestObject = $this->requestObjectMapper->find($requestUri)->getRequestObject();
+            $this->logger->debug('Get request object. request_uri: ' . $requestUri .  ', request object: ' . $requestObject);
             return new TextPlainResponse($requestObject, Http::STATUS_OK);
         } catch (DoesNotExistException $e) {
+            $this->logger->warning('Request object not found. request_uri: ' . $requestUri);
             return new TextPlainResponse('', Http::STATUS_NOT_FOUND);
         }
     }
@@ -205,6 +219,7 @@ class LoginController extends Controller
      */
     public function backend($id_token, $vp_token)
     {
+        $this->logger->debug('Received token via POST request. id_token: ' . $id_token . ' vp_token: ' . $vp_token);
         $this->saveTokens($id_token, $vp_token, false);
     }
 
@@ -217,9 +232,11 @@ class LoginController extends Controller
         $nonce = $this->session['nonce'];
         if (!is_null($nonce)) {
             $tokens = $this->getTokens($nonce);
-            if (!empty($tokens)) {
+            if (!is_null($tokens)) {
                 return new JSONResponse(array('finished' => true));
             }
+        } else {
+            $this->logger->error('Polling endpoint was called with a session that does not contain a nonce');
         }
         return new JSONResponse(array('finished' => false));
     }
@@ -231,6 +248,11 @@ class LoginController extends Controller
      */
     public function callback($id_token='', $vp_token='')
     {
+        // Redirect if already logged in
+        if ($this->userSession->isLoggedIn()) {
+            return $this->redirectToMainPage();
+        }
+
         $nonceFromSession = $this->session['nonce'];
              
         // check if we have tokens for this session in the database
@@ -238,6 +260,7 @@ class LoginController extends Controller
         if (!empty($tokens)) {
             // if the tokens where already used redirect to user to the main page
             if ($tokens->getUsed()) {
+                $this->logger->debug('Tokens where already used for login. Redirecting to the main page. Nonce: ' . $nonceFromSession);
                 return $this->redirectToMainPage();
             }
 
@@ -251,6 +274,8 @@ class LoginController extends Controller
             $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         } else {
             // if no tokens where found, cancel login with error page
+            $this->logger->debug('No id_token or vp_token passed to callback method. Nonce: ' . $nonceFromSession);
+            $this->logger->error('No id_token or vp_token passed to callback method');
             throw new LoginException("No id_token or vp_token passed to callback method");
         }
         
@@ -320,22 +345,8 @@ class LoginController extends Controller
         return $this->login($profile);
     }
 
-    private function authSuccess($profile)
-    {
-        if ($redirectUrl = $this->request->getParam('login_redirect_url')) {
-            $this->session->set('login_redirect_url', $redirectUrl);
-        }
-
-        return $this->login($profile);
-    }
-
     private function login($profile)
     {
-        // Redirect if already logged in
-        if ($this->userSession->isLoggedIn()) {
-            return new RedirectResponse($this->urlGenerator->getAbsoluteURL('/'));
-        }
-
         // Get attributes
         $confattr = $this->config->getSystemValue('oidc_login_attributes', array());
         $defattr = array(
@@ -438,6 +449,8 @@ class LoginController extends Controller
             $userPassword = substr(base64_encode(random_bytes(64)), 0, 30);
             $user = $this->userManager->createUser($uid, $userPassword);
         }
+
+        $this->logger->debug('Going to login user with username: ' . $uid . ', display name: ' . $user->getDisplayName() . ', user home: ' . $user->getHome());
 
         // Get base data directory
         $datadir = $this->config->getSystemValue('datadirectory');
@@ -604,11 +617,13 @@ class LoginController extends Controller
         $this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
         $token = $tokenProvider->getToken($this->userSession->getSession()->getId());
 
-        $this->userSession->completeLogin($user, [
+        $success = $this->userSession->completeLogin($user, [
             'loginName' => $user->getUID(),
             'password' => $userPassword,
             'token' => empty($userPassword) ? $token : null,
         ], false);
+
+        $this->logger->debug('User: ' . $uid . ', login status: ' . $success . ', token: ' . $token->getToken());
         
         //Workaround to create user files folder. Remove it later.
         \OC::$server->query(\OCP\Files\IRootFolder::class)->getUserFolder($user->getUID());
@@ -623,6 +638,7 @@ class LoginController extends Controller
     {
         // Go to redirection URI
         if ($redirectUrl = $this->session->get('login_redirect_url')) {
+            $this->logger->debug("Login successful. Redirecting user to login_redirect_url. Redirect URL: " . $redirectUrl);
             return new RedirectResponse($redirectUrl);
         }
 
@@ -631,8 +647,9 @@ class LoginController extends Controller
         if ($login_redir = $this->session->get('oidc_redir')) {
             $redir = $login_redir;
         }
-
-        return new RedirectResponse($this->urlGenerator->getAbsoluteURL($redir));
+        $redirectUrl = $this->urlGenerator->getAbsoluteURL($redir);
+        $this->logger->debug("Login successful. Redirecting user to main page. Redirect URL: " . $redirectUrl);
+        return new RedirectResponse($redirectUrl);
     }
 
     private function flatten($array, $prefix = '')
