@@ -1,0 +1,15 @@
+openid://?response_type=id_token
+    &client_id=https%3A%2F%2F5779-2a02-8070-27ba-5100-8158-e3bc-da6c-6529.ngrok.io%2Findex.php%2Fapps%2Foidc_login%2Foidc%2Fcallback
+    &scope=openid
+    &redirect_uri=https%3A%2F%2F5779-2a02-8070-27ba-5100-8158-e3bc-da6c-6529.ngrok.io%2Findex.php%2Fapps%2Foidc_login%2Foidc%2Fcallback
+    &nonce=22456608037449564223
+    &claims=%7B%22vp_token%22%3A%7B%22presentation_definition%22%3A%7B%22id%22%3A%22NextcloudLogin%22%2C%22input_descriptors%22%3A%5B%7B%22id%22%3A%22ref2%22%2C%22name%22%3A%22NextcloudCredential%22%2C%22schema%22%3A%5B%7B%22uri%22%3A%22did%3Aindy%3Aidu%3Atest%3A3QowxFtwciWceMFr7WbwnM%3A2%3ABasicScheme%3A0.1%22%2C%22required%22%3Atrue%7D%5D%2C%22constraints%22%3A%7B%22limit_disclosure%22%3A%22required%22%2C%22fields%22%3A%5B%7B%22path%22%3A%5B%22%24.values.last_name%22%5D%7D%2C%7B%22path%22%3A%5B%22%24.values.first_name%22%5D%7D%2C%7B%22path%22%3A%5B%22%24.values.email%22%5D%7D%5D%7D%7D%5D%7D%7D%7D
+    &registration=%7B%22subject_identifier_types_supported%22%3A%5B%22jkt%22%5D%2C%22vp_formats%22%3A%7B%22ac_vp%22%3Anull%7D%2C%22id_token_signing_alg_values_supported%22%3A%5B%22ES384%22%2C%22RS256%22%5D%7D
+
+openid://?response_type=id_token
+    &client_id=https%3A%2F%2F5779-2a02-8070-27ba-5100-8158-e3bc-da6c-6529.ngrok.io%2Findex.php%2Fapps%2Foidc_login%2Foidc%2Fcallback
+    &scope=openid
+    &request_uri=https%3A%2F%2F5779-2a02-8070-27ba-5100-8158-e3bc-da6c-6529.ngrok.io%2Findex.php%2Fapps%2Foidc_login%2Foidc%2Frequestobject%2Ffcd5b6f2c623182e998b5c70614d745b
+
+Request Object (https://5779-2a02-8070-27ba-5100-8158-e3bc-da6c-6529.ngrok.io/index.php/apps/oidc_login/oidc/requestobject/fcd5b6f2c623182e998b5c70614d745b)
+eyJhbGciOiJub25lIn0.eyJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4iLCJjbGllbnRfaWQiOiJodHRwczpcL1wvNTc3OS0yYTAyLTgwNzAtMjdiYS01MTAwLTgxNTgtZTNiYy1kYTZjLTY1Mjkubmdyb2suaW9cL2luZGV4LnBocFwvYXBwc1wvb2lkY19sb2dpblwvb2lkY1wvY2FsbGJhY2siLCJzY29wZSI6Im9wZW5pZCIsInJlc3BvbnNlX21vZGUiOiJwb3N0IiwicmVkaXJlY3RfdXJpIjoiaHR0cHM6XC9cLzU3NzktMmEwMi04MDcwLTI3YmEtNTEwMC04MTU4LWUzYmMtZGE2Yy02NTI5Lm5ncm9rLmlvXC9pbmRleC5waHBcL2FwcHNcL29pZGNfbG9naW5cL29pZGNcL2NhbGxiYWNrIiwibm9uY2UiOiIyMjQ1NjYwODAzNzQ0OTU2NDIyMyIsImNsYWltcyI6eyJ2cF90b2tlbiI6eyJwcmVzZW50YXRpb25fZGVmaW5pdGlvbiI6eyJpZCI6Ik5leHRjbG91ZExvZ2luIiwiaW5wdXRfZGVzY3JpcHRvcnMiOlt7ImlkIjoicmVmMiIsIm5hbWUiOiJOZXh0Y2xvdWRDcmVkZW50aWFsIiwic2NoZW1hIjpbeyJ1cmkiOiJkaWQ6aW5keTppZHU6dGVzdDozUW93eEZ0d2NpV2NlTUZyN1did25NOjI6QmFzaWNTY2hlbWU6MC4xIiwicmVxdWlyZWQiOnRydWV9XSwiY29uc3RyYWludHMiOnsibGltaXRfZGlzY2xvc3VyZSI6InJlcXVpcmVkIiwiZmllbGRzIjpbeyJwYXRoIjpbIiQudmFsdWVzLmxhc3RfbmFtZSJdfSx7InBhdGgiOlsiJC52YWx1ZXMuZmlyc3RfbmFtZSJdfSx7InBhdGgiOlsiJC52YWx1ZXMuZW1haWwiXX1dfX1dfX19LCJyZWdpc3RyYXRpb24iOnsic3ViamVjdF9pZGVudGlmaWVyX3R5cGVzX3N1cHBvcnRlZCI6WyJqa3QiXSwidnBfZm9ybWF0cyI6eyJhY192cCI6bnVsbH0sImlkX3Rva2VuX3NpZ25pbmdfYWxnX3ZhbHVlc19zdXBwb3J0ZWQiOlsiRVMzODQiLCJSUzI1NiJdfX0.

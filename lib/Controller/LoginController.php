@@ -314,6 +314,8 @@ class LoginController extends Controller
         $schemaAttr = $acHelper->getSchemaAttributes();
         $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
         
+        $this->logger->debug('Anoncred proof request: ' . $proofRequest);
+        
         $schemaResponse = $acHelper->getSchema();
         $schemas = json_encode(array(
             $schemaResponse->getId() => json_decode($schemaResponse->getJson())

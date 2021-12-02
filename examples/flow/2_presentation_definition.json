@@ -1,0 +1,37 @@
+{
+    "presentation_definition": {
+    "id": "NextcloudLogin",
+    "input_descriptors": [
+        {
+        "id": "ref2",
+        "name": "NextcloudCredential",
+        "schema": [
+            {
+            "uri": "did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1",
+            "required": true
+            }
+        ],
+        "constraints": {
+            "limit_disclosure": "required",
+            "fields": [
+            {
+                "path": [
+                "$.values.last_name"
+                ]
+            },
+            {
+                "path": [
+                "$.values.first_name"
+                ]
+            },
+            {
+                "path": [
+                "$.values.email"
+                ]
+            }
+            ]
+        }
+        }
+    ]
+    }
+}

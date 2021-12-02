@@ -1,0 +1,19 @@
+{
+    "nonce": "22456608037449564223",
+    "name": "NextcloudLogin",
+    "version": "1.0",
+    "requested_attributes": {
+        "ref2": {
+            "names": [
+                "first_name",
+                "last_name",
+                "email"
+            ],
+            "restrictions": [
+                {
+                    "schema_id": "3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1"
+                }
+            ]
+        }
+    }
+}
