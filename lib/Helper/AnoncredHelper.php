@@ -53,7 +53,7 @@ class AnoncredHelper
     public function getCredDef(): ParseResponseResult
     {
         // TODO get DID and ID from CredDefHelper
-        $credDefRequest = $this->libIndy->buildGetCredDefRequest("CsiDLAiFkQb9N4NDJKUagd", "CsiDLAiFkQb9N4NDJKUagd:3:CL:4687:NextcloudPrototypeCredentialWithoutRev")->get();
+        $credDefRequest = $this->libIndy->buildGetCredDefRequest($this->credDefHelper->getCredentialDID(), $this->credDefHelper->getCredentialId())->get();
         $credDefResponseRaw = $this->libIndy->submitRequest($this->poolHandle, $credDefRequest)->get();
         return $this->libIndy->parseGetCredDefResponse($credDefResponseRaw)->get();
     }

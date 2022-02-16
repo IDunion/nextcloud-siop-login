@@ -271,6 +271,8 @@ class LoginController extends Controller
             // if no tokens are in the database look for the ones in the GET parameter
             $idTokenRaw = $id_token;
             $vpTokenRaw = $vp_token;
+            // save tokens in database
+            $this->saveTokens($idTokenRaw, $vpTokenRaw, false);
             $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         } else {
             // if no tokens where found, cancel login with error page
@@ -278,6 +280,8 @@ class LoginController extends Controller
             $this->logger->error('No id_token or vp_token passed to callback method');
             throw new LoginException("No id_token or vp_token passed to callback method");
         }
+
+        $this->logger->debug('Callback received id_token: ' . $idTokenRaw . ' and vp_token: ' . $vpTokenRaw);
         
         // extract key from JWT payload
         $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
@@ -292,7 +296,7 @@ class LoginController extends Controller
             ->iss('https://self-issued.me/v2')
             ->sub($jwk->thumbprint('sha256'))
             ->exp()
-            ->iat()
+            //->iat() // TODO check for issue on mobile device with id_token issued in the future
             ->nbf()
             ->key($jwk)
             ->run();
@@ -326,7 +330,8 @@ class LoginController extends Controller
         ));
         
         // TODO uncomment these lines if used with the Lissi App
-        /*$valid = $libIndy->verifierVerifyProof($proofRequest, $proof, $schemas, $credentials, "{}", "{}")->get();
+        /*$libIndy = new LibIndy();
+        $valid = $libIndy->verifierVerifyProof($proofRequest, $vpTokenRaw, $schemas, $credentials, "{}", "{}")->get();
 
         if (!$valid->isValid()) {
             throw new LoginException("Credential verification failed");
@@ -336,13 +341,6 @@ class LoginController extends Controller
         $profile = $acHelper->getAttributesFromProof($vpTokenRaw);
 
         $acHelper->close();
-
-        // after successful verification save the tokens in the database or update the entry
-        if (empty($tokens)) {
-            $tokens = $this->saveTokens($idTokenRaw, $vpTokenRaw, true);
-        }
-        $tokens->setUsed(true);
-        $this->tokenMapper->update($tokens);
         
         return $this->login($profile);
     }
@@ -633,6 +631,9 @@ class LoginController extends Controller
         // Prevent being asked to change password
         $this->session->set('last-password-confirm', \OC::$server->query(ITimeFactory::class)->getTime());
 
+        $this->logger->debug('Login successful');
+        $this->markTokensAsUsed();
+
         return $this->redirectToMainPage();
     }
 
@@ -640,7 +641,7 @@ class LoginController extends Controller
     {
         // Go to redirection URI
         if ($redirectUrl = $this->session->get('login_redirect_url')) {
-            $this->logger->debug("Login successful. Redirecting user to login_redirect_url. Redirect URL: " . $redirectUrl);
+            $this->logger->debug("Redirecting user to login_redirect_url. Redirect URL: " . $redirectUrl);
             return new RedirectResponse($redirectUrl);
         }
 
@@ -650,8 +651,16 @@ class LoginController extends Controller
             $redir = $login_redir;
         }
         $redirectUrl = $this->urlGenerator->getAbsoluteURL($redir);
-        $this->logger->debug("Login successful. Redirecting user to main page. Redirect URL: " . $redirectUrl);
+        $this->logger->debug("Redirecting user to main page. Redirect URL: " . $redirectUrl);
         return new RedirectResponse($redirectUrl);
+    }
+
+    private function markTokensAsUsed() {
+        $nonceFromSession = $this->session['nonce'];
+        $tokens = $this->getTokens($nonceFromSession);
+        $tokens->setUsed(true);
+        $this->tokenMapper->update($tokens);
+        $this->logger->debug('Tokens marked as used. Nonce: ' . $nonceFromSession);
     }
 
     private function flatten($array, $prefix = '')
