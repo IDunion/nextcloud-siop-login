@@ -8,7 +8,7 @@ use JsonPath\JsonObject;
 class PresentationExchangeHelper {
     private const SCHEMA_REQUIRED = true;
     private const PRESENTATION_DEFINITION_ID = 'NextcloudLogin';
-    private const INPUT_DESCRIPTOR0_ID = 'ref2';
+    private const INPUT_DESCRIPTOR0_ID = 'ref1';
 
     public static function createPresentationDefinition($schemaConfig, $schemaAttr): array {
         $fields = array();

@@ -312,30 +312,18 @@ class LoginController extends Controller
         $acHelper = new AnoncredHelper($schemaConfig);
         $acHelper->parseProof($idToken->claims->get('_vp_token'), $vpTokenRaw);
         if (!$acHelper->verifyAttributes($vpTokenRaw)) {
+            $acHelper->close();
             throw new LoginException('The credential attributes have been manipulated');
         }
-        
-        $schemaAttr = $acHelper->getSchemaAttributes();
-        $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
-        
-        $this->logger->debug('Anoncred proof request: ' . $proofRequest);
-        
-        $schemaResponse = $acHelper->getSchema();
-        $schemas = json_encode(array(
-            $schemaResponse->getId() => json_decode($schemaResponse->getJson())
-        ));
-        $credDefResponse = $acHelper->getCredDef();
-        $credentials = json_encode(array(
-            $credDefResponse->getId() => json_decode($credDefResponse->getJson())
-        ));
-        
-        // TODO uncomment these lines if used with the Lissi App
-        /*$libIndy = new LibIndy();
-        $valid = $libIndy->verifierVerifyProof($proofRequest, $vpTokenRaw, $schemas, $credentials, "{}", "{}")->get();
+
+        // Verify the signature of the Anoncred proof
+        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $schemaConfig, $this->logger);
 
         if (!$valid->isValid()) {
+            $acHelper->close();
             throw new LoginException("Credential verification failed");
-        }*/
+        }
+        $this->logger->debug('Successfully verified Anoncred proof');
 
         // get attributes from proof
         $profile = $acHelper->getAttributesFromProof($vpTokenRaw);

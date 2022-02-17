@@ -7,6 +7,7 @@ use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 
 use JsonPath\JsonObject;
 use OCA\OIDCLogin\LibIndyWrapper\ParseResponseResult;
+use OCA\OIDCLogin\LibIndyWrapper\VerifierResult;
 
 class AnoncredHelper
 {
@@ -69,6 +70,26 @@ class AnoncredHelper
             $this->schema = $this->libIndy->parseGetSchemaResponse($schemaResponseRaw)->get();
         }
         return $this->schema;
+    }
+
+    public function verifyProof($vpTokenRaw, $nonce, $schemaConfig, $logger): VerifierResult {
+        $schemaAttr = $this->getSchemaAttributes();
+        $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
+        
+        $logger->debug('Anoncred proof request: ' . $proofRequest);
+        
+        $schemaResponse = $this->getSchema();
+        $schemas = json_encode(array(
+            $schemaResponse->getId() => json_decode($schemaResponse->getJson())
+        ));
+        $logger->debug('Anoncred verification - schemas: ' . $schemas);
+        $credDefResponse = $this->getCredDef();
+        $credentials = json_encode(array(
+            $credDefResponse->getId() => json_decode($credDefResponse->getJson())
+        ));
+        $logger->debug('Anoncred verification - credentials: ' . $credentials);
+
+        return $this->libIndy->verifierVerifyProof($proofRequest, $vpTokenRaw, $schemas, $credentials, "{}", "{}")->get();
     }
 
     public function getSchemaAttributes(): array
