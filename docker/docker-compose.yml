@@ -15,5 +15,5 @@ services:
       - "$PWD/docker/config:/var/www/html/config"
       - "$PWD/docker/data:/var/www/html/data"
       - "$PWD/docker/apps:/var/www/html/custom_apps"
-      - "$PWD:/var/www/html/custom_apps/oidc_login"
+      - "$PWD:/var/www/html/custom_apps/ssi_login"
       

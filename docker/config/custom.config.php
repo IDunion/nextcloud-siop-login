@@ -44,4 +44,5 @@ $CONFIG = array (
   'oidc_login_tls_verify' => true,
   'oidc_login_code_challenge_method' => 'S256',
   'debug' => true,
+  'loglevel' => '0',
 );

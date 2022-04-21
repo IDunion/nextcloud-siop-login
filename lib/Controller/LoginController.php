@@ -163,7 +163,7 @@ class LoginController extends Controller
             'callbackUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback'),
         );
 
-        return new TemplateResponse('oidc_login', 'AuthorizationRequest', $params);
+        return new TemplateResponse($this->appName, 'AuthorizationRequest', $params);
     }
 
     /**
@@ -296,7 +296,7 @@ class LoginController extends Controller
             ->iss('https://self-issued.me/v2')
             ->sub($jwk->thumbprint('sha256'))
             ->exp()
-            //->iat() // TODO check for issue on mobile device with id_token issued in the future
+            ->iat(30)
             ->nbf()
             ->key($jwk)
             ->run();

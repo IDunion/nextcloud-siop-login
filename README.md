@@ -12,4 +12,4 @@
 - Run ``./ngrok http 8080`` and visit the HTTPS url that is displayed in the terminal
 - On first start you have to setup the Nextcloud instance.
 Therefore you only need to specify an admin username and password and choose SQLite for the database (default).
-- After that you need to go to the ``Apps`` menu and enable the ``OpenID Connect Login`` plugin.
+- After that you need to go to the ``Apps`` menu and enable the ``SSI Login`` plugin.

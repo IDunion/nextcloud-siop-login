@@ -18,5 +18,5 @@
 
 <?php
 
-script('oidc_login', 'bundle');
-style('oidc_login', 'AuthorizationRequest'); 
+script('ssi_login', 'bundle');
+style('ssi_login', 'AuthorizationRequest'); 

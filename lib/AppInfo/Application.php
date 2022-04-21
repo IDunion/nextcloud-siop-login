@@ -21,7 +21,7 @@ use OCA\OIDCLogin\OIDCLoginOption;
 
 class Application extends App implements IBootstrap
 {
-    private $appName = 'oidc_login';
+    private $appName = 'ssi_login';
 
 	/** @var IURLGenerator */
 	protected $url;
