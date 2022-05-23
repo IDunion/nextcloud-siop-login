@@ -7,12 +7,40 @@ use JsonPath\JsonObject;
 
 class PresentationExchangeHelper {
     private const SCHEMA_REQUIRED = true;
-    private const PRESENTATION_DEFINITION_ID = 'NextcloudLogin';
-    private const INPUT_DESCRIPTOR0_ID = 'ref1';
+    private const PRESENTATION_DEFINITION_ID = 'NextcloudCombinedRequest';
+    private const INPUT_DESCRIPTOR0_ID = 'NextcloudCredentialAC';
+    private const INPUT_DESCRIPTOR1_ID = 'NextcloudCredentialLDP';
 
-    public static function createPresentationDefinition($schemaConfig, $schemaAttr): array {
-        $fields = array();
+    public static function createPresentationDefinition($schemaConfig, $schemaAttr, $jsonldConfig): array {
+        return array(
+            'id' => PresentationExchangeHelper::PRESENTATION_DEFINITION_ID,
+            'submission_requirements' => array(
+                array(
+                    'name' => 'NextcloudCredential',
+                    'rule' => 'pick',
+                    'count' => 1,
+                    'from' => 'A'
+                )
+            ),
+            'input_descriptors' => array(
+                PresentationExchangeHelper::anoncredInputDescriptor($schemaConfig, $schemaAttr),
+                PresentationExchangeHelper::jsonldInputDescriptor($jsonldConfig)
+            ),
+        );
+    }
+
+    private static function anoncredInputDescriptor($schemaConfig, $schemaAttr): array {
         $sHelper = new SchemaHelper($schemaConfig);
+        $fields = array(
+            array(
+                'path' => array('$.schema_id'),
+                'filter' => array(
+                    'type' => 'string',
+                    'const' => $sHelper->getSchemaIdFull()
+                )            
+            )
+        );
+        
         $desiredAttr = $sHelper->getSchemaDesiredAttr();
         foreach($schemaAttr as $attr) {
             if(in_array($attr, $desiredAttr) || empty($desiredAttr)) {
@@ -21,25 +49,53 @@ class PresentationExchangeHelper {
         }
 
         return array(
-            'presentation_definition' => array(
-                'id' => PresentationExchangeHelper::PRESENTATION_DEFINITION_ID,
-                'input_descriptors' => array(
-                    array(
-                        'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID,
-                        'name' => 'NextcloudCredential',
-                        'schema' => array(
-                            array(
-                                'uri' => $sHelper->getSchemaIdFull(), 
-                                'required' => PresentationExchangeHelper::SCHEMA_REQUIRED,
-                            ),
-                        ),
-                        'constraints' => array(
-                            'limit_disclosure' => 'required',
-                            'fields' => $fields,
-                        ),
-                    ),
+            'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID,
+            'group' => array('A'),
+            'format' => array(
+                'ac_vp' => array(
+                    'proof_type' => array('CLSignature2019')
+                )
+            ),
+            'constraints' => array(
+                'limit_disclosure' => 'required',
+                'fields' => $fields,
+            )
+        );
+    }
+
+    private static function jsonldInputDescriptor($jsonldConfig): array {
+        $fields = array(
+            array(
+                'path' => array('$.type'),
+                'filter' => array(
+                    'type' => 'array',
+                    'items' => array(
+                        'type' => 'string',
+                        'enum' => $jsonldConfig['type']
+                    )
+                )
+            )
+        );
+
+        foreach($jsonldConfig['claims'] as $claim) {
+            array_push($fields, array('path' => array('$.credentialSubject.'.$claim)));
+        }
+
+        return array(
+            'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID,
+            'group' => array('A'),
+            'format' => array(
+                'ldp_vc' => array(
+                    'proof_type' => array('BbsBlsSignature2020')
+                ),
+                'ldp_vp' => array(
+                    'proof_type' => array('BbsBlsSignature2020')
                 ),
             ),
+            'constraints' => array(
+                'limit_disclosure' => 'required',
+                'fields' => $fields,
+            )
         );
     }
 
@@ -55,7 +111,7 @@ class PresentationExchangeHelper {
 
         $requestedAttributes0 = array(
             PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID => array(
-                "names" => array("first_name", "last_name", "email"),
+                "names" => $attrs,
             )
         );
         

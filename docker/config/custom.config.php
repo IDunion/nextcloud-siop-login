@@ -19,9 +19,10 @@ $CONFIG = array (
     array (
       0 => 'localhost:8080',
       1 => '*.ngrok.io',
+      2 => 'desktop.local.fcloud.ovh',
   ),
   'memcache.local' => '\OC\Memcache\APCu',
-  'overwriteprotocol' => 'https',
+  'overwriteprotocol' => 'http',
   'oidc_login_button_text' => 'Log in with Wallet App',
   'oidc_login_auto_redirect' => false,
   'oidc_login_redir_fallback' => false,
@@ -34,10 +35,19 @@ $CONFIG = array (
     array(
       'name' => array('first_name', 'last_name'),
   ),
-  'oidc_login_schema_config' => array(
-    'did:indy:idu:test:3QowxFtwciWceMFr7WbwnM:2:BasicScheme:0.1' => array(
-      'first_name', 'last_name', 'email'
+  'oidc_login_anoncred_config' => array(
+    'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3' => array(
+      'email', 'time'
     ),
+  ),
+  'oidc_login_jsonld_config' => array(
+    'type' => array(
+      'NextcloudCredential',
+      'VerifiableCredential'
+    ),
+    'claims' => array(
+      'email', 'givenName', 'familyName'
+    )
   ),
   'oidc_create_groups' => true,
   'oidc_login_disable_registration' => false,

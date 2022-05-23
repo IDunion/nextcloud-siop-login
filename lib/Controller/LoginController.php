@@ -308,7 +308,7 @@ class LoginController extends Controller
             throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
         }
 
-        $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
+        $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
         $acHelper->parseProof($idToken->claims->get('_vp_token'), $vpTokenRaw);
         if (!$acHelper->verifyAttributes($vpTokenRaw)) {

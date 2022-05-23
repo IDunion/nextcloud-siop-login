@@ -31,20 +31,32 @@ class AuthenticationRequest
         $this->requestObjectMapper = $requestObjectMapper;
         $this->nonce = $nonce;
         
-        $schemaConfig = $this->config->getSystemValue('oidc_login_schema_config', array());
+        $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
         $acHelper = new AnoncredHelper($schemaConfig);
         $schemaAttr = $acHelper->getSchemaAttributes();
         $acHelper->close();
+        $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());
         $this->claims = array(
             'vp_token' => PresentationExchangeHelper::createPresentationDefinition(
                 $schemaConfig,
-                $schemaAttr
+                $schemaAttr,
+                $jsonldConfig
             ),
         );
 
         $this->registration = array(
             'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array('ac_vp' => null),
+            'vp_formats' => array(
+                'ac_vp' => array(
+                    'proof_type' => array('CLSignature2019')
+                ),
+                'ldp_vc' => array(
+                    'proof_type' => array('BbsBlsSignature2020')
+                ),
+                'ldp_vp' => array(
+                    'proof_type' => array('BbsBlsSignature2020')
+                ),
+            ),
             'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
         );
     }
@@ -64,22 +76,21 @@ class AuthenticationRequest
 
     private function createAuthenticationRequest($redirectUri, $useRequestUri, $responseMode = null): string
     {
-        $arDataBase = array(
+        $arData = array(
             'response_type' => 'id_token',
             'client_id' => $redirectUri,
-            'scope' => 'openid',
+            'redirect_uri' => $redirectUri,
+            'scope' => 'openid',            
+            'nonce' => $this->nonce
         );
 
-        $arDataFull = $arDataBase;
         if (!empty($responseMode)) {
-            $arDataFull['response_mode'] = $responseMode;
+            $arData['response_mode'] = $responseMode;
         }
-        $arDataFull['redirect_uri'] = $redirectUri;
-        $arDataFull['nonce'] = $this->nonce;
         
         if ($useRequestUri) {
-            $arDataFull['claims'] = $this->claims;
-            $arDataFull['registration'] = $this->registration;
+            $arData['claims'] = $this->claims;
+            $arData['registration'] = $this->registration;
 
             // Create request object as JWT signed with the none algorithm
             $algorithmManager = new AlgorithmManager([new None()]);
@@ -87,7 +98,7 @@ class AuthenticationRequest
             $jwsBuilder = new JWSBuilder($algorithmManager);
             $jws = $jwsBuilder
                         ->create()
-                        ->withPayload(json_encode($arDataFull))
+                        ->withPayload(json_encode($arData))
                         ->addSignature($jwk, ['alg' => 'none'])
                         ->build();
             $serializer = new CompactSerializer();
@@ -106,16 +117,15 @@ class AuthenticationRequest
             $requestObject->setCreationTimestamp($this->timeFactory->getTime());
             $this->requestObjectMapper->insert($requestObject);
 
-            // Create authentication request with redirect_uri and parameters after:
-            // https://openid.net/specs/openid-connect-core-1_0.html#RequestObject
-            $arDataRequestUri = $arDataBase;
+            // After JAR specification
+            $arDataRequestUri['client_id'] = $redirectUri;
             $arDataRequestUri['request_uri'] = $requestUri;
             return "openid://?" . http_build_query($arDataRequestUri);
         } else {
-            $arDataFull['claims'] = json_encode($this->claims);
-            $arDataFull['registration'] = json_encode($this->registration);
+            $arData['claims'] = json_encode($this->claims);
+            $arData['registration'] = json_encode($this->registration);
 
-            return "openid://?" . http_build_query($arDataFull);
+            return "openid://?" . http_build_query($arData);
         }
     }
 }
