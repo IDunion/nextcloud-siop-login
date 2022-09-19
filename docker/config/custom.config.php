@@ -30,10 +30,11 @@ $CONFIG = array (
   'oidc_login_attributes' => 
     array (
         'id' => 'email',
+        'mail' => 'email'
     ),
   'oidc_login_join_attributes' =>
     array(
-      'name' => array('first_name', 'last_name'),
+      'name' => array('first_name', 'last_name', 'givenName', 'familyName'),
   ),
   'oidc_login_anoncred_config' => array(
     'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3' => array(
@@ -41,13 +42,12 @@ $CONFIG = array (
     ),
   ),
   'oidc_login_jsonld_config' => array(
-    'type' => array(
-      'NextcloudCredential',
-      'VerifiableCredential'
-    ),
+    'type' => 'NextcloudCredential',
     'claims' => array(
       'email', 'givenName', 'familyName'
-    )
+    ),
+    'verifier_uri' => 'http://verification-service:3000',
+    'verifier_access_token' => 'sdzaZdlsOD50VuI8XwIFF8JaEq4gID'
   ),
   'oidc_create_groups' => true,
   'oidc_login_disable_registration' => false,

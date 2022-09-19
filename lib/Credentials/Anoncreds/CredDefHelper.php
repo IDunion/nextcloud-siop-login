@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\OIDCLogin\Helper;
+namespace OCA\OIDCLogin\Credentials\Anoncreds;
 
 class CredDefHelper {
     private $credentialId;

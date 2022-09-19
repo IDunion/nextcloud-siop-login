@@ -1,9 +1,10 @@
 <?php
 
-namespace OCA\OIDCLogin\Helper;
+namespace OCA\OIDCLogin\Credentials\Anoncreds;
 
 use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
 use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
+use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
 
 use JsonPath\JsonObject;
 use OCA\OIDCLogin\LibIndyWrapper\ParseResponseResult;
@@ -27,7 +28,7 @@ class AnoncredHelper
         //$this->libIndy->setDefaultLogger("trace");
 
         $configName = "idunion_test_ledger";
-        $config = '{"genesis_txn":"'.__DIR__.'/../LibIndyWrapper/genesis_txn.txt"}';
+        $config = '{"genesis_txn":"'.__DIR__.'/../../LibIndyWrapper/genesis_txn.txt"}';
         try {
             $this->libIndy->createPoolLedgerConfig($configName, $config)->get();
         } catch (LibIndyException $e) {

@@ -5,11 +5,13 @@ namespace OCA\OIDCLogin\Helper;
 use Exception;
 use JsonPath\JsonObject;
 
+use OCA\OIDCLogin\Credentials\Anoncreds\SchemaHelper;
+
 class PresentationExchangeHelper {
     private const SCHEMA_REQUIRED = true;
     private const PRESENTATION_DEFINITION_ID = 'NextcloudCombinedRequest';
-    private const INPUT_DESCRIPTOR0_ID = 'NextcloudCredentialAC';
-    private const INPUT_DESCRIPTOR1_ID = 'NextcloudCredentialLDP';
+    public const INPUT_DESCRIPTOR0_ID = 'NextcloudCredentialAC';
+    public const INPUT_DESCRIPTOR1_ID = 'NextcloudCredentialLDP';
 
     public static function createPresentationDefinition($schemaConfig, $schemaAttr, $jsonldConfig): array {
         return array(
@@ -52,7 +54,7 @@ class PresentationExchangeHelper {
             'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID,
             'group' => array('A'),
             'format' => array(
-                'ac_vp' => array(
+                'ac_vc' => array(
                     'proof_type' => array('CLSignature2019')
                 )
             ),
@@ -64,16 +66,15 @@ class PresentationExchangeHelper {
     }
 
     private static function jsonldInputDescriptor($jsonldConfig): array {
+        $filter = array(
+            'type' => 'array',
+            'contains' => array('const' => $jsonldConfig['type'])
+        );
+
         $fields = array(
             array(
                 'path' => array('$.type'),
-                'filter' => array(
-                    'type' => 'array',
-                    'items' => array(
-                        'type' => 'string',
-                        'enum' => $jsonldConfig['type']
-                    )
-                )
+                'filter' => $filter
             )
         );
 

@@ -9,6 +9,7 @@
 	"require": {
 		"endroid/qr-code": "^4.2",
 		"web-token/jwt-framework": "^2.2",
-		"galbar/jsonpath": "^2.0"
+		"galbar/jsonpath": "^2.0",
+		"guzzlehttp/guzzle": "^7.0"
 	}
 }

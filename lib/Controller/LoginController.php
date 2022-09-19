@@ -22,15 +22,11 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TextPlainResponse;
-use OCA\OIDCLogin\LibIndyWrapper\LibIndy;
-use OCA\OIDCLogin\LibIndyWrapper\LibIndyException;
 use OCA\OIDCLogin\Db\Token;
 use OCA\OIDCLogin\Db\TokenMapper;
-use OCA\OIDCLogin\Db\RequestObject;
 use OCA\OIDCLogin\Db\RequestObjectMapper;
-use OCA\OIDCLogin\Helper\PeHelper;
-use OCA\OIDCLogin\Helper\AnoncredHelper;
 use OCA\OIDCLogin\Helper\AuthenticationRequest;
+use OCA\OIDCLogin\Credentials\Anoncreds\AnoncredVerifier;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
@@ -42,13 +38,10 @@ use Endroid\QrCode\Writer\SvgWriter;
 
 use Jose\Component\Core\JWK;
 use Jose\Easy\Load;
+
+use JsonPath\JsonObject;
+use OCA\OIDCLogin\Credentials\W3CVerifiableCredentials\VCVerifier;
 use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
-use Jose\Component\KeyManagement\JWKFactory;
-use Jose\Easy\Build;
-use Jose\Component\Signature\Algorithm\None;
-use Jose\Component\Core\AlgorithmManager;
-use Jose\Component\Signature\JWSBuilder;
-use Jose\Component\Signature\Serializer\CompactSerializer;
 
 use function Safe\json_decode;
 
@@ -253,7 +246,7 @@ class LoginController extends Controller
             return $this->redirectToMainPage();
         }
 
-        $nonceFromSession = $this->session['nonce'];
+        $nonceFromSession = '22456608037449564223'; //$this->session['nonce'];
              
         // check if we have tokens for this session in the database
         $tokens = $this->getTokens($nonceFromSession);
@@ -290,7 +283,7 @@ class LoginController extends Controller
         $jwk = JWK::createFromJson(json_encode($jwkJSON));
 
         // validate JWT signature
-        $idToken = Load::jws($idTokenRaw)
+        /*$idToken = Load::jws($idTokenRaw)
             ->algs(['ES384', 'RS256'])
             ->aud($redirectUri)
             ->iss('https://self-issued.me/v2')
@@ -306,29 +299,39 @@ class LoginController extends Controller
         // check if the nonce from the id_token matches the session nonce
         if ($nonce != $nonceFromSession) {
             throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
+        }*/
+
+        // Check whether an Anoncred or an JSON-LD credential was sent
+        $ps = new JsonObject($idTokenPayload['_vp_token'], true);
+        if ($ps->get('$.presentation_submission.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID) {
+            /********************************************************************************
+             * Process Hyperledger Indy Anoncred Credential
+             ********************************************************************************/
+            $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
+            $profile = AnoncredVerifier::verify(
+                $vpTokenRaw,
+                $ps,
+                $schemaConfig,
+                $nonceFromSession,
+                $this->logger
+            );
+        } else if ($ps->get('$.presentation_submission.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
+            /********************************************************************************
+             * Process W3C Verifiable Credential in JSON-LD format with BBS+ signature
+             ********************************************************************************/
+            $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());
+            $profile = VCVerifier::verify(
+                $vpTokenRaw,
+                $ps,
+                $nonceFromSession,
+                $jsonldConfig,
+                $this->logger
+            );
+        } else {
+            $this->logger->debug('_vp_token claim does not contain a valid Presentation Submission: '.$ps->getJson());
+            $this->logger->error('_vp_token claim does not contain a valid Presentation Submission');
+            throw new LoginException('_vp_token claim does not contain a valid Presentation Submission');
         }
-
-        $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
-        $acHelper = new AnoncredHelper($schemaConfig);
-        $acHelper->parseProof($idToken->claims->get('_vp_token'), $vpTokenRaw);
-        if (!$acHelper->verifyAttributes($vpTokenRaw)) {
-            $acHelper->close();
-            throw new LoginException('The credential attributes have been manipulated');
-        }
-
-        // Verify the signature of the Anoncred proof
-        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $schemaConfig, $this->logger);
-
-        if (!$valid->isValid()) {
-            $acHelper->close();
-            throw new LoginException("Credential verification failed");
-        }
-        $this->logger->debug('Successfully verified Anoncred proof');
-
-        // get attributes from proof
-        $profile = $acHelper->getAttributesFromProof($vpTokenRaw);
-
-        $acHelper->close();
         
         return $this->login($profile);
     }
@@ -352,12 +355,18 @@ class LoginController extends Controller
         foreach ($joinAttr as $key => $values) {
             $profile[$key] = '';
             foreach ($values as $v) {
-                $profile[$key] = $profile[$key] . ' ' . $profile[$v];
+                if (array_key_exists($v, $profile)) {
+                    $profile[$key] = $profile[$key] . ' ' . $profile[$v];
+                }
             }
+            $profile[$key] = trim($profile[$key]);
         }
 
         // Flatten the profile array
         $profile = $this->flatten($profile);
+
+        var_dump($profile);
+        throw new LoginException('DEBUG');
 
         // Get UID
         $uid = $profile[$attr['id']];

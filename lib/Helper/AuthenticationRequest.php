@@ -3,6 +3,7 @@
 namespace OCA\OIDCLogin\Helper;
 
 use OCA\OIDCLogin\Db\RequestObject;
+use OCA\OIDCLogin\Credentials\Anoncreds\AnoncredHelper;
 
 use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Signature\Algorithm\None;
