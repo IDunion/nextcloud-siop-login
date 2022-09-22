@@ -22,7 +22,7 @@ $CONFIG = array (
       2 => 'desktop.local.fcloud.ovh',
   ),
   'memcache.local' => '\OC\Memcache\APCu',
-  'overwriteprotocol' => 'http',
+  'overwriteprotocol' => 'https',
   'oidc_login_button_text' => 'Log in with Wallet App',
   'oidc_login_auto_redirect' => false,
   'oidc_login_redir_fallback' => false,

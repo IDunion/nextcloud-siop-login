@@ -4,10 +4,10 @@ services:
   nextcloud:
     build: .
     ports:
-      - 80:8080
+      - 127.0.0.1:80:80
     user: 1000:1000
     environment:
-      - PORT=8080
+      - PORT=80
     sysctls:
         - "kernel.msgmnb=65536"
         - "kernel.msgmax=65536"
