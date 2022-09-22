@@ -1,9 +1,21 @@
-# Requirements
+# Description
+
+This Nextcloud plugin enables SSI login with an OIDC SIOP compatible wallet. 
+So far only the [Lissi Wallet](https://lissi.id/) is compatible with this plugin.
+The exact protocol used in this plugin is documented [here](https://github.com/IDunion/nextcloud-siop-docu).
+This code is only for demonstration purposes right now and is not used in production. 
+If you find any bugs please open an Issue or create a Pull Request. 
+The code is based on the [Nextcloud OIDC Login](https://github.com/pulsejet/nextcloud-oidc-login) 
+plugin.
+
+# Test the Plugin Locally
+
+## Requirements
 
 - docker
 - docker-compose
 
-# Installation
+## Installation
 
 - Open a terminal in the root directory of this repository
 - Run ``docker/install.sh`` to prepare the Nextcloud installation.
