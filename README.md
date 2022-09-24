@@ -1,6 +1,6 @@
 # Description
 
-This Nextcloud plugin enables SSI login with an OIDC SIOP compatible wallet. 
+This Nexcloud plugin provides the capability to login into Nextcloud with a wallet that supports [OpenID4VP](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html). 
 So far only the [Lissi Wallet](https://lissi.id/) is compatible with this plugin.
 The exact protocol used in this plugin is documented [here](https://github.com/IDunion/nextcloud-siop-docu).
 This code is only for demonstration purposes right now and is not used in production. 
