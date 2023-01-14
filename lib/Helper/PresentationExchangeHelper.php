@@ -13,9 +13,9 @@ class PresentationExchangeHelper {
     public const INPUT_DESCRIPTOR0_ID = 'NextcloudCredentialAC';
     public const INPUT_DESCRIPTOR1_ID = 'NextcloudCredentialLDP';
 
-    public static function createPresentationDefinition($schemaConfig, $schemaAttr, $jsonldConfig): array {
+    public static function createPresentationDefinition($schemaConfig, $schemaAttr, $jsonldConfig, $presentationID): array {
         return array(
-            'id' => PresentationExchangeHelper::PRESENTATION_DEFINITION_ID,
+            'id' => $presentationID,
             'submission_requirements' => array(
                 array(
                     'name' => 'NextcloudCredential',
@@ -33,15 +33,7 @@ class PresentationExchangeHelper {
 
     private static function anoncredInputDescriptor($schemaConfig, $schemaAttr): array {
         $sHelper = new SchemaHelper($schemaConfig);
-        $fields = array(
-            array(
-                'path' => array('$.schema_id'),
-                'filter' => array(
-                    'type' => 'string',
-                    'const' => $sHelper->getSchemaIdFull()
-                )            
-            )
-        );
+        $fields = array();
         
         $desiredAttr = $sHelper->getSchemaDesiredAttr();
         foreach($schemaAttr as $attr) {
@@ -53,11 +45,7 @@ class PresentationExchangeHelper {
         return array(
             'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID,
             'group' => array('A'),
-            'format' => array(
-                'ac_vc' => array(
-                    'proof_type' => array('CLSignature2019')
-                )
-            ),
+            'schema' => array(array('uri' => $sHelper->getSchemaIdFull())),
             'constraints' => array(
                 'limit_disclosure' => 'required',
                 'fields' => $fields,
@@ -66,17 +54,7 @@ class PresentationExchangeHelper {
     }
 
     private static function jsonldInputDescriptor($jsonldConfig): array {
-        $filter = array(
-            'type' => 'array',
-            'contains' => array('const' => $jsonldConfig['type'])
-        );
-
-        $fields = array(
-            array(
-                'path' => array('$.type'),
-                'filter' => $filter
-            )
-        );
+        $fields = [];
 
         foreach($jsonldConfig['claims'] as $claim) {
             array_push($fields, array('path' => array('$.credentialSubject.'.$claim)));
@@ -85,14 +63,7 @@ class PresentationExchangeHelper {
         return array(
             'id' => PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID,
             'group' => array('A'),
-            'format' => array(
-                'ldp_vc' => array(
-                    'proof_type' => array('BbsBlsSignature2020')
-                ),
-                'ldp_vp' => array(
-                    'proof_type' => array('BbsBlsSignature2020')
-                ),
-            ),
+            'schema' => array(array('uri' => $jsonldConfig['type'])),
             'constraints' => array(
                 'limit_disclosure' => 'required',
                 'fields' => $fields,
@@ -100,7 +71,7 @@ class PresentationExchangeHelper {
         );
     }
 
-    public static function createProofRequest($nonce, $schemaConfig, $schemaAttr): string {
+    public static function createProofRequest($nonce, $schemaConfig, $schemaAttr, $presentationID): string {
         $schemaHelper = new SchemaHelper($schemaConfig);
         $attrs = array();
         foreach($schemaAttr as $attr) {
@@ -123,22 +94,21 @@ class PresentationExchangeHelper {
         return json_encode(
             array(
                 "nonce" => $nonce,
-                "name" => PresentationExchangeHelper::PRESENTATION_DEFINITION_ID,
+                "name" => $presentationID,
                 "version" => "1.0",
                 "requested_attributes" => $requestedAttributes0 
             )
         );
     }
 
-    public static function parsePresentationSubmission(array $presentationSubmission): string {
+    public static function parsePresentationSubmission(array $presentationSubmission, string $presentationIdFromSession): string {
         $jsonSub = new JsonObject($presentationSubmission, true);
-        if ($jsonSub->get('$.presentation_submission.definition_id') 
-                != PresentationExchangeHelper::PRESENTATION_DEFINITION_ID) {
+        if ($jsonSub->get('$.definition_id') != $presentationIdFromSession) {
             throw new Exception('Presentation submission contains wrong "definition_id"');
         }
-        if ($jsonSub->get('$.presentation_submission.descriptor_map[0].format') != 'ac_vp') {
+        if ($jsonSub->get('$.descriptor_map[0].format') != 'ac_vp') {
             throw new Exception('Wrong credential format');
         }
-        return $jsonSub->get('$.presentation_submission.descriptor_map[0].path_nested.path');
+        return $jsonSub->get('$.descriptor_map[0].path_nested.path');
     }
 }

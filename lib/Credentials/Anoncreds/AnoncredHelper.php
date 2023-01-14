@@ -44,12 +44,12 @@ class AnoncredHelper
         $this->libIndy->closePoolLedger($this->poolHandle)->get();
     }
 
-    public function parseProof(array $presentationSubmission, string $vpToken)
+    public function parseProof(array $presentationSubmission, string $presentationID, string $vpToken)
     {
         $jsonProof = new JsonObject($vpToken, true);
         $credDefId = $jsonProof->get('$.identifiers[0].cred_def_id');
         $this->credDefHelper = new CredDefHelper($credDefId);
-        $this->credentialPath = PresentationExchangeHelper::parsePresentationSubmission($presentationSubmission);
+        $this->credentialPath = PresentationExchangeHelper::parsePresentationSubmission($presentationSubmission, $presentationID);
     }
 
     public function getCredDef(): ParseResponseResult

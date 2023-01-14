@@ -20,17 +20,17 @@ class Version000000Date20211004160300 extends SimpleMigrationStep {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
-        if (!$schema->hasTable('oidclogin_tokens')) {
-            $table = $schema->createTable('oidclogin_tokens');
+        if (!$schema->hasTable('ssilogin_tokens')) {
+            $table = $schema->createTable('ssilogin_tokens');
             $table->addColumn('id', Types::INTEGER, [
                 'autoincrement' => true,
                 'notnull' => true,
             ]);
-            $table->addColumn('nonce', Types::STRING, [
+            $table->addColumn('presentation_id', Types::STRING, [
                 'notnull' => true,
                 'length' => 200
             ]);
-            $table->addColumn('id_token', Types::TEXT, [
+            $table->addColumn('presentation_submission', Types::TEXT, [
                 'notnull' => true,
                 'default' => ''
             ]);
@@ -47,7 +47,7 @@ class Version000000Date20211004160300 extends SimpleMigrationStep {
 			]);
 
             // $table->setPrimaryKey(['nonce']);
-            $table->addIndex(['nonce', 'creation_timestamp'], 'oidclogin_tokens_index');
+            $table->addIndex(['presentation_id', 'creation_timestamp'], 'ssilogin_tokens_index');
         }
         return $schema;
     }

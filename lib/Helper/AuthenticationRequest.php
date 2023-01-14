@@ -20,10 +20,10 @@ class AuthenticationRequest
     private $requestObjectMapper;
     private $nonce;
 
-    private $claims;
+    private $presentationDefinition;
     private $registration;
 
-    public function __construct($appName, $urlGenerator, $timeFactory, $config, $requestObjectMapper, $nonce)
+    public function __construct($appName, $urlGenerator, $timeFactory, $config, $requestObjectMapper, $nonce, $presentationID)
     {
         $this->appName = $appName;
         $this->urlGenerator = $urlGenerator;
@@ -37,13 +37,12 @@ class AuthenticationRequest
         $schemaAttr = $acHelper->getSchemaAttributes();
         $acHelper->close();
         $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());
-        $this->claims = array(
-            'vp_token' => PresentationExchangeHelper::createPresentationDefinition(
-                $schemaConfig,
-                $schemaAttr,
-                $jsonldConfig
-            ),
-        );
+        $this->presentationDefinition = PresentationExchangeHelper::createPresentationDefinition(
+                                                $schemaConfig,
+                                                $schemaAttr,
+                                                $jsonldConfig,
+                                                $presentationID
+                                            );
 
         $this->registration = array(
             'subject_identifier_types_supported' => array('jkt'),
@@ -65,23 +64,23 @@ class AuthenticationRequest
     public function createOnDevice(): string
     {
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
-        return $this->createAuthenticationRequest($redirectUri, false);
+        $useRequestUri = $this->config->getSystemValue('oidc_login_use_request_uri', true);
+        return $this->createAuthenticationRequest($redirectUri, $useRequestUri);
     }
 
     public function createCrossDevice(): string
     {
         $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         $useRequestUri = $this->config->getSystemValue('oidc_login_use_request_uri', true);
-        return $this->createAuthenticationRequest($redirectUri, $useRequestUri, 'post');
+        return $this->createAuthenticationRequest($redirectUri, $useRequestUri, 'direct_post');
     }
 
     private function createAuthenticationRequest($redirectUri, $useRequestUri, $responseMode = null): string
     {
         $arData = array(
-            'response_type' => 'id_token',
+            'response_type' => 'vp_token',
             'client_id' => $redirectUri,
-            'redirect_uri' => $redirectUri,
-            'scope' => 'openid',            
+            'redirect_uri' => $redirectUri,         
             'nonce' => $this->nonce
         );
 
@@ -90,7 +89,7 @@ class AuthenticationRequest
         }
         
         if ($useRequestUri) {
-            $arData['claims'] = $this->claims;
+            $arData['presentation_definition'] = $this->presentationDefinition;
             $arData['registration'] = $this->registration;
 
             // Create request object as JWT signed with the none algorithm
@@ -123,7 +122,7 @@ class AuthenticationRequest
             $arDataRequestUri['request_uri'] = $requestUri;
             return "openid://?" . http_build_query($arDataRequestUri);
         } else {
-            $arData['claims'] = json_encode($this->claims);
+            $arData['presentation_definition'] = json_encode($this->presentationDefinition);
             $arData['registration'] = json_encode($this->registration);
 
             return "openid://?" . http_build_query($arData);

@@ -37,12 +37,13 @@ $CONFIG = array (
       'name' => array('first_name', 'last_name', 'givenName', 'familyName'),
   ),
   'oidc_login_anoncred_config' => array(
-    'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3' => array(
-      'email', 'time'
-    ),
+    'schema' => 'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3',
+    'attributes' => array(
+        'email'
+      ),
   ),
   'oidc_login_jsonld_config' => array(
-    'type' => 'NextcloudCredential',
+    'type' => ["VerifiableCredential", "NextcloudCredential"],
     'claims' => array(
       'email', 'givenName', 'familyName'
     ),
@@ -55,4 +56,5 @@ $CONFIG = array (
   'oidc_login_code_challenge_method' => 'S256',
   'debug' => true,
   'loglevel' => '0',
+  'default_phone_region' => 'DE',
 );

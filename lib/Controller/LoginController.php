@@ -17,7 +17,7 @@ use OCP\IGroupManager;
 use OCP\ISession;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OC\User\LoginException;
-use OC\Authentication\Token\DefaultTokenProvider;
+use OC\Authentication\Token\IProvider;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -35,6 +35,8 @@ use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
 use Endroid\QrCode\Writer\SvgWriter;
+
+use Ramsey\Uuid\Uuid;
 
 use Jose\Component\Core\JWK;
 use Jose\Easy\Load;
@@ -67,6 +69,8 @@ class LoginController extends Controller
     private $appData;
     /** @var LoggerInterface */
     private $logger;
+    /** @var IProvider */
+    private $tokenProvider;
 
 
     public function __construct(
@@ -78,6 +82,7 @@ class LoginController extends Controller
         IUserSession $userSession,
         IGroupManager $groupManager,
         ISession $session,
+        IProvider $tokenProvider,
         IL10N $l,
         IAppData $appData,
         TokenMapper $tokenMapper,
@@ -93,6 +98,7 @@ class LoginController extends Controller
         $this->userSession = $userSession;
         $this->groupManager = $groupManager;
         $this->session = $session;
+        $this->tokenProvider = $tokenProvider;
         $this->l = $l;
         $this->appData = $appData;
         $this->tokenMapper = $tokenMapper;
@@ -118,8 +124,13 @@ class LoginController extends Controller
             return $this->redirectToMainPage();
         }
         
+        // Generate nonce compatible with the IndySDK
         $nonce = strval(random_int(1000000000, 9999999999)) . strval(random_int(1000000000, 9999999999));
         $this->session['nonce'] = $nonce;
+
+        // Generate UUID4 as presentation ID
+        $presentationID = Uuid::uuid4()->toString();
+        $this->session['presentationID'] = $presentationID;
 
         $ar = new AuthenticationRequest(
             $this->appName,
@@ -127,7 +138,8 @@ class LoginController extends Controller
             $this->timeFactory,
             $this->config,
             $this->requestObjectMapper,
-            $nonce
+            $nonce,
+            $presentationID
         );
 
         $arUrlPost = $ar->createCrossDevice();
@@ -177,17 +189,16 @@ class LoginController extends Controller
         }
     }
 
-    private function saveTokens(string $idTokenRaw, string $vpTokenRaw, bool $used)
+    private function saveTokens(string $presentationSubmissionRaw, string $vpTokenRaw, bool $used)
     {
-        // extract nonce from JWT payload
-        $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
-        $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
-        $nonce = $idTokenPayload['nonce'];
+        // Extract presentation ID from presentation submission
+        $presentationSubmission = new JsonObject($presentationSubmissionRaw, true);
+        $presentationID = $presentationSubmission->get('$.definition_id');
 
-        if (!empty($nonce)) {
+        if (!empty($presentationID)) {
             $token = new Token();
-            $token->setNonce($nonce);
-            $token->setIdToken($idTokenRaw);
+            $token->setPresentationId($presentationID);
+            $token->setPresentationSubmission($presentationSubmissionRaw);
             $token->setVpToken($vpTokenRaw);
             $token->setUsed($used);
             $token->setCreationTimestamp($this->timeFactory->getTime());
@@ -197,10 +208,10 @@ class LoginController extends Controller
         return null;
     }
 
-    private function getTokens($nonce)
+    private function getTokens($presentationID)
     {
         try {
-            return $this->tokenMapper->find($nonce);
+            return $this->tokenMapper->find($presentationID);
         } catch (DoesNotExistException $e) {
             return null;
         }
@@ -210,10 +221,10 @@ class LoginController extends Controller
      * @PublicPage
      * @NoCSRFRequired
      */
-    public function backend($id_token, $vp_token)
+    public function backend($presentation_submission, $vp_token)
     {
-        $this->logger->debug('Received token via POST request. id_token: ' . $id_token . ' vp_token: ' . $vp_token);
-        $this->saveTokens($id_token, $vp_token, false);
+        $this->logger->debug('Received token via POST request. presentation_submission: ' . $presentation_submission . ' vp_token: ' . $vp_token);
+        $this->saveTokens($presentation_submission, $vp_token, false);
     }
 
     /**
@@ -222,14 +233,14 @@ class LoginController extends Controller
      */
     public function polling()
     {
-        $nonce = $this->session['nonce'];
-        if (!is_null($nonce)) {
-            $tokens = $this->getTokens($nonce);
+        $presentationID = $this->session['presentationID'];
+        if (!is_null($presentationID)) {
+            $tokens = $this->getTokens($presentationID);
             if (!is_null($tokens)) {
                 return new JSONResponse(array('finished' => true));
             }
         } else {
-            $this->logger->error('Polling endpoint was called with a session that does not contain a nonce');
+            $this->logger->error('Polling endpoint was called with a session that does not contain a presentationID');
         }
         return new JSONResponse(array('finished' => false));
     }
@@ -239,71 +250,47 @@ class LoginController extends Controller
      * @NoCSRFRequired
      * @UseSession
      */
-    public function callback($id_token='', $vp_token='')
+    public function callback($presentation_submission='', $vp_token='')
     {
         // Redirect if already logged in
         if ($this->userSession->isLoggedIn()) {
             return $this->redirectToMainPage();
         }
 
-        $nonceFromSession = '22456608037449564223'; //$this->session['nonce'];
+        $nonceFromSession = $this->session['nonce'];
+        $presentationIdFromSession = $this->session['presentationID'];
              
         // check if we have tokens for this session in the database
-        $tokens = $this->getTokens($nonceFromSession);
+        $tokens = $this->getTokens($presentationIdFromSession);
         if (!empty($tokens)) {
             // if the tokens where already used redirect to user to the main page
             if ($tokens->getUsed()) {
-                $this->logger->debug('Tokens where already used for login. Redirecting to the main page. Nonce: ' . $nonceFromSession);
+                $this->logger->debug('Tokens where already used for login. Redirecting to the main page. Presentation ID: ' . $presentationIdFromSession);
                 return $this->redirectToMainPage();
             }
 
-            $idTokenRaw = $tokens->getIdToken();
+            $presentationSubmissionRaw = $tokens->getPresentationSubmission();
             $vpTokenRaw = $tokens->getVpToken();
             $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.backend');
-        } elseif (strlen($id_token) != 0 && strlen($vp_token) != 0) {
+        } elseif (strlen($presentation_submission) != 0 && strlen($vp_token) != 0) {
             // if no tokens are in the database look for the ones in the GET parameter
-            $idTokenRaw = $id_token;
+            $presentationSubmissionRaw = $presentation_submission;
             $vpTokenRaw = $vp_token;
             // save tokens in database
-            $this->saveTokens($idTokenRaw, $vpTokenRaw, false);
+            $this->saveTokens($presentationSubmissionRaw, $vpTokenRaw, false);
             $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         } else {
             // if no tokens where found, cancel login with error page
-            $this->logger->debug('No id_token or vp_token passed to callback method. Nonce: ' . $nonceFromSession);
+            $this->logger->debug('No id_token or vp_token passed to callback method. Presentation ID: ' . $presentationIdFromSession);
             $this->logger->error('No id_token or vp_token passed to callback method');
-            throw new LoginException("No id_token or vp_token passed to callback method");
+            throw new LoginException("No presentation_definition or vp_token passed to callback method");
         }
 
-        $this->logger->debug('Callback received id_token: ' . $idTokenRaw . ' and vp_token: ' . $vpTokenRaw);
+        $this->logger->debug('Callback received presentation_submission: ' . $presentationSubmissionRaw . ' and vp_token: ' . $vpTokenRaw);
         
-        // extract key from JWT payload
-        $idTokenPayloadEncoded = explode(".", $idTokenRaw)[1];
-        $idTokenPayload = json_decode(base64_decode($idTokenPayloadEncoded, true), true);
-        $jwkJSON = $idTokenPayload['sub_jwk'];
-        $jwk = JWK::createFromJson(json_encode($jwkJSON));
-
-        // validate JWT signature
-        /*$idToken = Load::jws($idTokenRaw)
-            ->algs(['ES384', 'RS256'])
-            ->aud($redirectUri)
-            ->iss('https://self-issued.me/v2')
-            ->sub($jwk->thumbprint('sha256'))
-            ->exp()
-            ->iat(30)
-            ->nbf()
-            ->key($jwk)
-            ->run();
-
-        $nonce = $idToken->claims->nonce();
-
-        // check if the nonce from the id_token matches the session nonce
-        if ($nonce != $nonceFromSession) {
-            throw new LoginException('Nonce does not match ('.$nonce.' != '.$nonceFromSession.')');
-        }*/
-
         // Check whether an Anoncred or an JSON-LD credential was sent
-        $ps = new JsonObject($idTokenPayload['_vp_token'], true);
-        if ($ps->get('$.presentation_submission.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID) {
+        $ps = new JsonObject($presentationSubmissionRaw, true);
+        if ($ps->get('$.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR0_ID) {
             /********************************************************************************
              * Process Hyperledger Indy Anoncred Credential
              ********************************************************************************/
@@ -313,9 +300,10 @@ class LoginController extends Controller
                 $ps,
                 $schemaConfig,
                 $nonceFromSession,
+                $presentationIdFromSession,
                 $this->logger
             );
-        } else if ($ps->get('$.presentation_submission.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
+        } else if ($ps->get('$.descriptor_map[0].id') == PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
             /********************************************************************************
              * Process W3C Verifiable Credential in JSON-LD format with BBS+ signature
              ********************************************************************************/
@@ -323,14 +311,15 @@ class LoginController extends Controller
             $profile = VCVerifier::verify(
                 $vpTokenRaw,
                 $ps,
+                $presentationIdFromSession,
                 $nonceFromSession,
                 $jsonldConfig,
                 $this->logger
             );
         } else {
-            $this->logger->debug('_vp_token claim does not contain a valid Presentation Submission: '.$ps->getJson());
-            $this->logger->error('_vp_token claim does not contain a valid Presentation Submission');
-            throw new LoginException('_vp_token claim does not contain a valid Presentation Submission');
+            $this->logger->debug('presentation_submission does not contain a valid Presentation Submission: '.$ps->getJson());
+            $this->logger->error('presentation_submission does not contain a valid Presentation Submission');
+            throw new LoginException('presentation_submission does not contain a valid Presentation Submission');
         }
         
         return $this->login($profile);
@@ -365,8 +354,8 @@ class LoginController extends Controller
         // Flatten the profile array
         $profile = $this->flatten($profile);
 
-        var_dump($profile);
-        throw new LoginException('DEBUG');
+        //var_dump($profile);
+        //throw new LoginException('DEBUG');
 
         // Get UID
         $uid = $profile[$attr['id']];
@@ -609,10 +598,9 @@ class LoginController extends Controller
 
         // Complete login
         $this->userSession->getSession()->regenerateId();
-        $tokenProvider = \OC::$server->query(DefaultTokenProvider::class);
-        $this->userSession->setTokenProvider($tokenProvider);
+        $this->userSession->setTokenProvider($this->tokenProvider);
         $this->userSession->createSessionToken($this->request, $user->getUID(), $user->getUID());
-        $token = $tokenProvider->getToken($this->userSession->getSession()->getId());
+        $token = $this->tokenProvider->getToken($this->userSession->getSession()->getId());
 
         $success = $this->userSession->completeLogin($user, [
             'loginName' => $user->getUID(),
@@ -653,11 +641,11 @@ class LoginController extends Controller
     }
 
     private function markTokensAsUsed() {
-        $nonceFromSession = $this->session['nonce'];
-        $tokens = $this->getTokens($nonceFromSession);
+        $presentationIdFromSession = $this->session['presentationID'];
+        $tokens = $this->getTokens($presentationIdFromSession);
         $tokens->setUsed(true);
         $this->tokenMapper->update($tokens);
-        $this->logger->debug('Tokens marked as used. Nonce: ' . $nonceFromSession);
+        $this->logger->debug('Tokens marked as used. PresentationID: ' . $presentationIdFromSession);
     }
 
     private function flatten($array, $prefix = '')

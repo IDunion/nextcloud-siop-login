@@ -9,8 +9,8 @@ use OCP\AppFramework\Db\Entity;
 
 class Token extends Entity implements JsonSerializable
 {
-    protected $nonce;
-    protected $idToken;
+    protected $presentationId;
+    protected $presentationSubmission;
     protected $vpToken;
     protected $used;
     protected $creationTimestamp;
@@ -26,8 +26,8 @@ class Token extends Entity implements JsonSerializable
     {
         return [
             'id' => $this->id,
-            'nonce' => $this->nonce,
-            'id_token' => $this->idToken,
+            'presentation_id' => $this->presentationId,
+            'presentation_submission' => $this->presentationSubmission,
             'vp_token' => $this->vpToken,
             'used' => $this->used,
             'creation_timestamp' => $this->creationTimestamp,

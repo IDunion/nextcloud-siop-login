@@ -5,10 +5,10 @@ namespace OCA\OIDCLogin\Credentials\Anoncreds;
 use OC\User\LoginException;
 
 class AnoncredVerifier {
-    public static function verify($vpTokenRaw, $presentationSubmission, $schemaConfig, $nonce, $logger): array {
+    public static function verify($vpTokenRaw, $presentationSubmission, $schemaConfig, string $nonce, string $presentationID, $logger): array {
         $logger->debug('Processing Anoncred Credential');
         $acHelper = new AnoncredHelper($schemaConfig);
-        $acHelper->parseProof($presentationSubmission, $vpTokenRaw);
+        $acHelper->parseProof($presentationSubmission, $presentationID, $vpTokenRaw);
         if (!$acHelper->verifyAttributes($vpTokenRaw)) {
             $acHelper->close();
             throw new LoginException('The credential attributes have been manipulated');

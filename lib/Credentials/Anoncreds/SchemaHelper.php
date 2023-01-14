@@ -10,8 +10,8 @@ class SchemaHelper {
     private $schemaDesiredAttr;
 
     function __construct($schemaConfig) {
-        $schemaId = array_keys($schemaConfig)[0];
-        $this->schemaDesiredAttr = $schemaConfig[$schemaId];
+        $schemaId = $schemaConfig['schema'];
+        $this->schemaDesiredAttr = $schemaConfig['attributes'];
         $schemaIdParts = explode(":", $schemaId);
         if (str_starts_with($schemaId, 'did:indy:')) {
             $this->schemaIdForIndy = implode(':', array_slice($schemaIdParts, 4));

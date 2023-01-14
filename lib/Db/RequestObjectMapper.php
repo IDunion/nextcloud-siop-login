@@ -9,7 +9,7 @@ class RequestObjectMapper extends QBMapper
 {
     public function __construct(IDBConnection $db)
     {
-        parent::__construct($db, 'oidclogin_request_uris', RequestObject::class);
+        parent::__construct($db, 'ssilogin_request_uris', RequestObject::class);
     }
 
     public function find(string $requestUri)

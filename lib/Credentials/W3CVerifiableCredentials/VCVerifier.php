@@ -10,21 +10,25 @@ use GuzzleHttp\Psr7\Request;
 use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
 
 class VCVerifier {
-    public static function verify(string $vpTokenRaw, JsonObject $presentationSubmission, string $nonce, array $jsonLDConfig, $logger): array {
+    public static function verify(string $vpTokenRaw, JsonObject $presentationSubmission, string $presentationSubmissionID, string $nonce, array $jsonLDConfig, $logger): array {
         $logger->debug('Processing W3C Verifiable Credential');
         $vpToken = new JsonObject($vpTokenRaw, true);
 
         // Check whether the presentation submission has the expected format and values
-        if (!VCVerifier::verifyPresentationSubmission($presentationSubmission)) {
-            $logger->warning('Presentation Submission has an unexpected format or contains unexpected values: '.$presentationSubmission->getJson());
+        if (!VCVerifier::verifyPresentationSubmission($presentationSubmission, $presentationSubmissionID)) {
+            $logger->error('Presentation submission has an unexpected format or contains wrong values: '.$presentationSubmission->getJson());
+            throw new LoginException('Presentation submission has an unexpected format or contains wrong values.');
         }
 
         // Extract presentation and credential from vp_token
-        $presentation = $vpToken->getJsonObjects($presentationSubmission->get('$.presentation_submission.descriptor_map[0].path'));
-        $credential = $presentation->getJsonObjects($presentationSubmission->get('$.presentation_submission.descriptor_map[0].path_nested.path'));
+        $presentation = $vpToken->getJsonObjects($presentationSubmission->get('$.descriptor_map[0].path'));
+        $credential = $presentation->getJsonObjects($presentationSubmission->get('$.descriptor_map[0].path_nested.path'));
 
         // Check if nonce is correct
-        if ($credential->get('$.proof.nonce') != $nonce) {
+        // TODO uncomment lines below to check the nonce
+        $nonce = "challenge";
+        
+        if ($presentation->get('$.proof.challenge') != $nonce) {
             $logger->error('Could not verify W3C Credential: Wrong nonce');
             throw new LoginException('Could not verify W3C Credential: Wrong nonce');
         }
@@ -38,20 +42,23 @@ class VCVerifier {
         }
 
         // Send presentation to verification service
-        // TODO remove comments
-        /*$client = new Client(['base_uri' => $jsonLDConfig['verifier_uri']]);
+        $client = new Client(['base_uri' => $jsonLDConfig['verifier_uri']]);
         $headers = [
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $jsonLDConfig['verifier_access_token']
             ];
-        $request = new Request('POST', '/w3c/verification', $headers, $presentation->getJson());
+        $body = array(
+            "credential" => $presentation->getValue(),
+            "challenge" => $nonce,
+        );
+        $request = new Request('POST', '/w3c/verification', $headers, json_encode($body));
         $response = $client->send($request);
         $jsonResponse = json_decode($response->getBody());
 
         if (!$jsonResponse->verified) {
             $logger->error('Could not verify W3C Credential: Invalid signature or schema');
             throw new LoginException('Could not verify W3C Credential: Invalid signature or schema');
-        }*/
+        }
 
         // Get user claims from credential
         foreach ($jsonLDConfig['claims'] as $claim) {
@@ -60,24 +67,28 @@ class VCVerifier {
         return $profile;
     }
 
-    private static function verifyPresentationSubmission(JsonObject $ps): bool {
-        if (count($ps->get('$.presentation_submission.descriptor_map')) != 1) {
+    private static function verifyPresentationSubmission(JsonObject $ps, string $presentationSubmissionID): bool {
+        if ($ps->get('$.definition_id') != $presentationSubmissionID) {
             return false;
         }
 
-        if ($ps->get('$.presentation_submission.descriptor_map[0].id') != PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
+        if (count($ps->get('$.descriptor_map')) != 1) {
             return false;
         }
 
-        if ($ps->get('$.presentation_submission.descriptor_map[0].format') != "ldp_vp") {
+        if ($ps->get('$.descriptor_map[0].id') != PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
             return false;
         }
 
-        if ($ps->get('$.presentation_submission.descriptor_map[0].path_nested.id') != PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
+        if ($ps->get('$.descriptor_map[0].format') != "ldp_vp") {
             return false;
         }
 
-        if ($ps->get('$.presentation_submission.descriptor_map[0].path_nested.format') != 'ldp_vc') {
+        if ($ps->get('$.descriptor_map[0].path_nested.id') != PresentationExchangeHelper::INPUT_DESCRIPTOR1_ID) {
+            return false;
+        }
+
+        if ($ps->get('$.descriptor_map[0].path_nested.format') != 'ldp_vc') {
             return false;
         }
 

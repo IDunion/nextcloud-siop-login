@@ -24,4 +24,5 @@ services:
     environment:
       - PORT=3000
       - BEARER_TOKEN_SECRET=sdzaZdlsOD50VuI8XwIFF8JaEq4gID
+      - LOG_LEVEL=trace
       

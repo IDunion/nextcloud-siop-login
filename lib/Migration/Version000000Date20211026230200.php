@@ -21,8 +21,8 @@ class Version000000Date20211026230200 extends SimpleMigrationStep {
         /** @var ISchemaWrapper $schema */
         $schema = $schemaClosure();
 
-        if (!$schema->hasTable('oidclogin_request_uris')) {
-            $table = $schema->createTable('oidclogin_request_uris');
+        if (!$schema->hasTable('ssilogin_request_uris')) {
+            $table = $schema->createTable('ssilogin_request_uris');
             $table->addColumn('id', Types::INTEGER, [
                 'autoincrement' => true,
                 'notnull' => true,
@@ -39,7 +39,7 @@ class Version000000Date20211026230200 extends SimpleMigrationStep {
 				'notnull' => false,
 			]);
 
-            $table->addIndex(['request_uri', 'creation_timestamp'], 'oidclogin_request_uris_index');
+            $table->addIndex(['request_uri', 'creation_timestamp'], 'ssilogin_request_uris_index');
         }
         return $schema;
     }
