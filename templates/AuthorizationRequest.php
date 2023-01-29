@@ -1,14 +1,13 @@
-<div class="background-color" style="width: 100%;">
-    <div class="center background-color">
-        <h1>Wallet App Login</h1>
+<div class="center">
+    <div class="card">
+        <h1><b>Wallet App Login</b></h1>
         <br>
         <br>
-        <a class="button" href="<?php print_unescaped($_['ar']) ?>">Authenticate with Wallet App on this device</a>
-        <br>
+        <a class="button custom-button" href="<?php print_unescaped($_['ar']) ?>">Authenticate with your wallet app on this device</a>
         <br>
         <br>
         <h2>OR</h2>
-        <p>Scan the following QR code with the wallet app on your phone:</p>
+        <p class="description">Scan the following QR code with the wallet app on your phone:</p>
         <a href="<?php p($_['arPost']); ?>"><img class="qrcode" src="<?php p($_['qr']); ?>" alt="QR Code" /></a>
     </div>
 </div>

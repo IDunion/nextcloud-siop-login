@@ -18,7 +18,7 @@ use OCP\ISession;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OC\User\LoginException;
 use OC\Authentication\Token\IProvider;
-use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Http\Template\PublicTemplateResponse;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TextPlainResponse;
@@ -37,9 +37,6 @@ use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
 use Endroid\QrCode\Writer\SvgWriter;
 
 use Ramsey\Uuid\Uuid;
-
-use Jose\Component\Core\JWK;
-use Jose\Easy\Load;
 
 use JsonPath\JsonObject;
 use OCA\OIDCLogin\Credentials\W3CVerifiableCredentials\VCVerifier;
@@ -168,7 +165,7 @@ class LoginController extends Controller
             'callbackUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback'),
         );
 
-        return new TemplateResponse($this->appName, 'AuthorizationRequest', $params);
+        return new PublicTemplateResponse($this->appName, 'AuthorizationRequest', $params);
     }
 
     /**
@@ -189,7 +186,7 @@ class LoginController extends Controller
         }
     }
 
-    private function saveTokens(string $presentationSubmissionRaw, string $vpTokenRaw, bool $used)
+    private function saveTokens(string $presentationSubmissionRaw, string $vpTokenRaw, bool $used, bool $viaPost)
     {
         // Extract presentation ID from presentation submission
         $presentationSubmission = new JsonObject($presentationSubmissionRaw, true);
@@ -201,6 +198,7 @@ class LoginController extends Controller
             $token->setPresentationSubmission($presentationSubmissionRaw);
             $token->setVpToken($vpTokenRaw);
             $token->setUsed($used);
+            $token->setViaPost($viaPost);
             $token->setCreationTimestamp($this->timeFactory->getTime());
             $this->tokenMapper->insert($token);
             return $token;
@@ -224,7 +222,7 @@ class LoginController extends Controller
     public function backend($presentation_submission, $vp_token)
     {
         $this->logger->debug('Received token via POST request. presentation_submission: ' . $presentation_submission . ' vp_token: ' . $vp_token);
-        $this->saveTokens($presentation_submission, $vp_token, false);
+        $this->saveTokens($presentation_submission, $vp_token, false, true);
     }
 
     /**
@@ -236,7 +234,10 @@ class LoginController extends Controller
         $presentationID = $this->session['presentationID'];
         if (!is_null($presentationID)) {
             $tokens = $this->getTokens($presentationID);
-            if (!is_null($tokens)) {
+            // In case of on-device flow wait until the login process is finished
+            // to redirect the original tab to the home folder.
+            if (!is_null($tokens) && ($tokens->getViaPost() || $tokens->getUsed())) {
+                $this->logger->debug('Found tokens - Via Post: ' . $tokens->getViaPost() . ' Used: ' . $tokens->getUsed());
                 return new JSONResponse(array('finished' => true));
             }
         } else {
@@ -277,7 +278,7 @@ class LoginController extends Controller
             $presentationSubmissionRaw = $presentation_submission;
             $vpTokenRaw = $vp_token;
             // save tokens in database
-            $this->saveTokens($presentationSubmissionRaw, $vpTokenRaw, false);
+            $this->saveTokens($presentationSubmissionRaw, $vpTokenRaw, false, false);
             $redirectUri = $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback');
         } else {
             // if no tokens where found, cancel login with error page

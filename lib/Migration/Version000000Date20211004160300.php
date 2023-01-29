@@ -42,6 +42,10 @@ class Version000000Date20211004160300 extends SimpleMigrationStep {
                 'notnull' => false,
                 'default' => false
             ]);
+            $table->addColumn('via_post', Types::BOOLEAN, [
+                'notnull' => false,
+                'default' => false
+            ]);
             $table->addColumn('creation_timestamp', Types::DATETIME, [
 				'notnull' => false,
 			]);

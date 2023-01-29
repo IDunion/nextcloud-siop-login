@@ -1,8 +1,3 @@
-if(OCA.Theming) {
-    console.log("change color");
-    $('.background-color').css({backgroundColor:OCA.Theming.color});
-}
-
 // This variable is used to stop polling as soon
 // as the browser is redirected.
 var redirected = false;
@@ -16,7 +11,7 @@ $(document).ready(function() {
 function doPolling(pollingUri, callbackUri) {
     // Don't poll after the browser was redirected
     if (!redirected) {
-        $.get(pollingUri, function(data) {console.log(data["finished"]);
+        $.get(pollingUri, function(data) {
             // Check if the authentication process finished and
             // if the browser was already redirected
             if (data["finished"] && !redirected) {
@@ -25,5 +20,5 @@ function doPolling(pollingUri, callbackUri) {
             }
         });
     }
-    setTimeout(doPolling, 1000, pollingUri, callbackUri);
+    setTimeout(doPolling, 2000, pollingUri, callbackUri);
 }

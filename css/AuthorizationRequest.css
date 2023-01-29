@@ -1,23 +1,25 @@
-#header {
-    display: none !important;
-}
-
-#content {
-    padding-top: 0%;
-}
-
 h1 {
-    color: white;
+    color: black;
     font-size: x-large;
     padding: 20px;
 }
 
 h2 {
-    color: white;
+    color: black;
 }
 
-p {
-    color: white;
+.app-ssi_login {
+    overflow: scroll !important;
+}
+
+.custom-button {
+    display: block;
+    margin: auto;
+    max-width: max-content;
+}
+
+.description {
+    color: black;
     padding: 20px;
 }
 
@@ -26,9 +28,19 @@ p {
     top: 10%;
     width: 100%;
     padding: 20px;
+    padding-bottom: 100px;
+}
+
+.card {
+    width:fit-content;
+    margin: auto;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 0 10px grey;
 }
 
 .qrcode {
     max-width: -webkit-fill-available !important;
+    margin-bottom: 10px;
 }
 

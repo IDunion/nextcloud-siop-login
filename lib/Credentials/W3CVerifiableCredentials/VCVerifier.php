@@ -25,7 +25,7 @@ class VCVerifier {
         $credential = $presentation->getJsonObjects($presentationSubmission->get('$.descriptor_map[0].path_nested.path'));
 
         // Check if nonce is correct
-        // TODO uncomment lines below to check the nonce
+        // TODO remove preset nonce parameter
         $nonce = "challenge";
         
         if ($presentation->get('$.proof.challenge') != $nonce) {

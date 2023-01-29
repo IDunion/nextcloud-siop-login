@@ -13,12 +13,14 @@ class Token extends Entity implements JsonSerializable
     protected $presentationSubmission;
     protected $vpToken;
     protected $used;
+    protected $viaPost;
     protected $creationTimestamp;
 
     public function __construct()
     {
         $this->addType('id', Types::INTEGER);
         $this->addType('used', Types::BOOLEAN);
+        $this->addType('viaPost', Types::BOOLEAN);
         $this->addType('creationTimestamp', Types::INTEGER);
     }
 
@@ -30,6 +32,7 @@ class Token extends Entity implements JsonSerializable
             'presentation_submission' => $this->presentationSubmission,
             'vp_token' => $this->vpToken,
             'used' => $this->used,
+            'via_post' => $this->viaPost,
             'creation_timestamp' => $this->creationTimestamp,
         ];
     }

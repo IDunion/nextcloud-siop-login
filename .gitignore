@@ -1,2 +1,3 @@
 docker-dev/
 *_test.php
+node_modules/

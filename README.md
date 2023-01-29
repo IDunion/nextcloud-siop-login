@@ -27,3 +27,8 @@ plugin.
 Therefore you only need to specify an admin username and password and choose SQLite for the database (default).
 - After that you need to go to the ``Apps`` menu and enable the ``SSI Login`` plugin.
 
+# Development
+
+## Build JS Bundle
+
+``NODE_OPTIONS=--openssl-legacy-provider webpack build --config webpack.config.js``
