@@ -34,6 +34,7 @@ h2 {
 .card {
     width:fit-content;
     margin: auto;
+    padding: 10px;
     background-color: white;
     border-radius: 20px;
     box-shadow: 0 0 10px grey;
@@ -41,6 +42,9 @@ h2 {
 
 .qrcode {
     max-width: -webkit-fill-available !important;
-    margin-bottom: 10px;
+}
+
+.backButton:hover {
+    text-decoration: underline;
 }
 

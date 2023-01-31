@@ -37,8 +37,8 @@ class VCVerifier {
         $typeConfigured = $jsonLDConfig['type'];
         $typeFound = $credential->get('$.type');
         if (!(count($typeFound) == count($typeConfigured) && !array_diff($typeFound, $typeConfigured))) {
-            $logger->error('Could not verify W3C Credential: Wrong type');
-            throw new LoginException('Could not verify W3C Credential: Wrong type');
+            $logger->error('Could not verify W3C credential: Wrong type');
+            throw new LoginException('Could not verify W3C credential: Wrong type');
         }
 
         // Send presentation to verification service
@@ -53,11 +53,18 @@ class VCVerifier {
         );
         $request = new Request('POST', '/w3c/verification', $headers, json_encode($body));
         $response = $client->send($request);
+
+        if ($response->getStatusCode() != 200) {
+            $logger->debug('W3C credential verification service returned a '. $response->getStatusCode() . ' status code. URL: ' . $jsonLDConfig['verifier_uri']);
+            $logger->error('W3C credential verification service returned an error code');
+            throw new LoginException('Could not verify W3C credential: Verification service returned an error code');
+        }
+
         $jsonResponse = json_decode($response->getBody());
 
         if (!$jsonResponse->verified) {
-            $logger->error('Could not verify W3C Credential: Invalid signature or schema');
-            throw new LoginException('Could not verify W3C Credential: Invalid signature or schema');
+            $logger->error('Could not verify W3C credential: Invalid signature or schema');
+            throw new LoginException('Could not verify W3C credential: Invalid signature or schema');
         }
 
         // Get user claims from credential

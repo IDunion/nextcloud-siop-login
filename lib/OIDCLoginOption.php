@@ -33,7 +33,7 @@ class OIDCLoginOption implements IAlternativeLogin {
 
 	public function getLabel(): string
 	{
-		return $this->l->t($this->config->getSystemValue('oidc_login_button_text', 'OpenID Connect'));
+		return $this->l->t($this->config->getSystemValue('oidc_login_button_text', 'Log in with wallet app'));
 	}
 
 	public function getLink(): string

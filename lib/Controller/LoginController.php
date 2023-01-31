@@ -163,6 +163,7 @@ class LoginController extends Controller
             'ar' => $arUrl,
             'pollingUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.polling'),
             'callbackUri' => $this->urlGenerator->linkToRouteAbsolute($this->appName.'.login.callback'),
+            'backButton' => $this->urlGenerator->linkToRouteAbsolute('core.login.showLoginForm'),
         );
 
         return new PublicTemplateResponse($this->appName, 'AuthorizationRequest', $params);

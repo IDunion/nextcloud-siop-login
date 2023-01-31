@@ -9,6 +9,8 @@
         <h2>OR</h2>
         <p class="description">Scan the following QR code with the wallet app on your phone:</p>
         <a href="<?php p($_['arPost']); ?>"><img class="qrcode" src="<?php p($_['qr']); ?>" alt="QR Code" /></a>
+        <br>
+        <a class="backButton" href="<?php p($_['backButton']); ?>">Back to login</a>
     </div>
 </div>
 

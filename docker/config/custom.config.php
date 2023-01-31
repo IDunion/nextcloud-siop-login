@@ -23,7 +23,6 @@ $CONFIG = array (
   ),
   'memcache.local' => '\OC\Memcache\APCu',
   'overwriteprotocol' => 'https',
-  'oidc_login_button_text' => 'Log in with Wallet App',
   'oidc_login_auto_redirect' => false,
   'oidc_login_redir_fallback' => false,
   'oidc_login_hide_password_form' => false,
