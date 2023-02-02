@@ -32,3 +32,15 @@ Therefore you only need to specify an admin username and password and choose SQL
 ## Build JS Bundle
 
 ``NODE_OPTIONS=--openssl-legacy-provider webpack build --config webpack.config.js``
+
+# Known Issues
+
+## On-Device Flow: Being redirected to the login screen after authentication
+
+If the pooling endpoint is pooled after the /oidc/callback endpoint is called and before
+the browser is redirected to the dashboard, the user will be redirected directly back
+to the login page. This happens because, for some reason, the pooling request in this case
+is setting a new cookie that is not signed in. The pooling endpoint does not set any cookies,
+so there is probably some middleware involved that is post-processing the request.
+This is only a problem if the pooling timeout is set to a very low value. 
+If the timeout is set to 2 seconds, this problem usually does not occur.
