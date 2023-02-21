@@ -44,7 +44,7 @@ class AnoncredHelper
         $this->libIndy->closePoolLedger($this->poolHandle)->get();
     }
 
-    public function parseProof(array $presentationSubmission, string $presentationID, string $vpToken)
+    public function parseProof(JsonObject $presentationSubmission, string $presentationID, string $vpToken)
     {
         $jsonProof = new JsonObject($vpToken, true);
         $credDefId = $jsonProof->get('$.identifiers[0].cred_def_id');

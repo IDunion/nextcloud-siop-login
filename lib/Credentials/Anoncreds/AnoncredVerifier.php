@@ -2,10 +2,11 @@
 
 namespace OCA\OIDCLogin\Credentials\Anoncreds;
 
+use JsonPath\JsonObject;
 use OC\User\LoginException;
 
 class AnoncredVerifier {
-    public static function verify($vpTokenRaw, $presentationSubmission, $schemaConfig, string $nonce, string $presentationID, $logger): array {
+    public static function verify(string $vpTokenRaw, JsonObject $presentationSubmission, $schemaConfig, string $nonce, string $presentationID, $logger): array {
         $logger->debug('Processing Anoncred Credential');
         $acHelper = new AnoncredHelper($schemaConfig);
         $acHelper->parseProof($presentationSubmission, $presentationID, $vpTokenRaw);

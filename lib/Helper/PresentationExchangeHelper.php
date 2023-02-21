@@ -101,14 +101,13 @@ class PresentationExchangeHelper {
         );
     }
 
-    public static function parsePresentationSubmission(array $presentationSubmission, string $presentationIdFromSession): string {
-        $jsonSub = new JsonObject($presentationSubmission, true);
-        if ($jsonSub->get('$.definition_id') != $presentationIdFromSession) {
+    public static function parsePresentationSubmission(JsonObject $presentationSubmission, string $presentationIdFromSession): string {
+        if ($presentationSubmission->get('$.definition_id') != $presentationIdFromSession) {
             throw new Exception('Presentation submission contains wrong "definition_id"');
         }
-        if ($jsonSub->get('$.descriptor_map[0].format') != 'ac_vp') {
+        if ($presentationSubmission->get('$.descriptor_map[0].format') != 'ac_vp') {
             throw new Exception('Wrong credential format');
         }
-        return $jsonSub->get('$.descriptor_map[0].path_nested.path');
+        return $presentationSubmission->get('$.descriptor_map[0].path_nested.path');
     }
 }
