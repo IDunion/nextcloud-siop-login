@@ -73,9 +73,9 @@ class AnoncredHelper
         return $this->schema;
     }
 
-    public function verifyProof($vpTokenRaw, $nonce, $schemaConfig, $logger): VerifierResult {
+    public function verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig, $logger): VerifierResult {
         $schemaAttr = $this->getSchemaAttributes();
-        $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr);
+        $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr, $presentationID);
         
         $logger->debug('Anoncred proof request: ' . $proofRequest);
         

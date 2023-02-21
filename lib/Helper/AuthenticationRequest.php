@@ -120,12 +120,12 @@ class AuthenticationRequest
             // After JAR specification
             $arDataRequestUri['client_id'] = $redirectUri;
             $arDataRequestUri['request_uri'] = $requestUri;
-            return "openid://?" . http_build_query($arDataRequestUri);
+            return "https://agents.labor.gematik.de/?" . http_build_query($arDataRequestUri);
         } else {
             $arData['presentation_definition'] = json_encode($this->presentationDefinition);
             $arData['registration'] = json_encode($this->registration);
 
-            return "openid://?" . http_build_query($arData);
+            return "https://agents.labor.gematik.de/?" . http_build_query($arData);
         }
     }
 }

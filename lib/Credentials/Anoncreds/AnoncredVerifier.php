@@ -16,7 +16,7 @@ class AnoncredVerifier {
         }
 
         // Verify the signature of the Anoncred proof
-        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $schemaConfig, $logger);
+        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig, $logger);
 
         if (!$valid->isValid()) {
             $acHelper->close();
