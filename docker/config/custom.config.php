@@ -36,7 +36,7 @@ $CONFIG = array (
       'name' => array('first_name', 'last_name', 'givenName', 'familyName'),
   ),
   'oidc_login_anoncred_config' => array(
-    'schema' => 'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3',
+    'schema' => 'did:indy:idu:test:EE9WoUGQo38dmXyyP4bJqw:3:CL:9384:VerifiedEmail',
     'attributes' => array(
         'email'
       ),
