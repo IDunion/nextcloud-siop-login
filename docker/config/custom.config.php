@@ -26,6 +26,7 @@ $CONFIG = array (
   'oidc_login_auto_redirect' => false,
   'oidc_login_redir_fallback' => false,
   'oidc_login_hide_password_form' => false,
+  'oidc_login_use_sd_jwt' => true,
   'oidc_login_attributes' => 
     array (
         'id' => 'email',

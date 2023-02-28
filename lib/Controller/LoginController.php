@@ -41,6 +41,8 @@ use Ramsey\Uuid\Uuid;
 use JsonPath\JsonObject;
 use OCA\OIDCLogin\Credentials\W3CVerifiableCredentials\VCVerifier;
 use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
+use OCA\OIDCLogin\Helper\SdJwtPresentationExchangeHelper;
+use OCA\OIDCLogin\Credentials\SdJwt\SdJwtVerifier;
 
 use function Safe\json_decode;
 
@@ -316,6 +318,18 @@ class LoginController extends Controller
                 $presentationIdFromSession,
                 $nonceFromSession,
                 $jsonldConfig,
+                $this->logger
+            );
+        } else if ($ps->get('$.descriptor_map[0].id') == SdJwtPresentationExchangeHelper::INPUT_DESCRIPTOR_ID) {
+            /********************************************************************************
+             * Process SD-JWT credential
+             ********************************************************************************/
+            $profile = SdJwtVerifier::verify(
+                $vpTokenRaw,
+                $ps,
+                $presentationIdFromSession,
+                $nonceFromSession,
+                $redirectUri,
                 $this->logger
             );
         } else {

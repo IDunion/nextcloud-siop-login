@@ -21,7 +21,7 @@ class AuthenticationRequest
     private $nonce;
 
     private $presentationDefinition;
-    private $registration;
+    private $registration = Null;
 
     public function __construct($appName, $urlGenerator, $timeFactory, $config, $requestObjectMapper, $nonce, $presentationID)
     {
@@ -32,33 +32,37 @@ class AuthenticationRequest
         $this->requestObjectMapper = $requestObjectMapper;
         $this->nonce = $nonce;
         
-        $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
-        $acHelper = new AnoncredHelper($schemaConfig);
-        $schemaAttr = $acHelper->getSchemaAttributes();
-        $acHelper->close();
-        $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());
-        $this->presentationDefinition = PresentationExchangeHelper::createPresentationDefinition(
-                                                $schemaConfig,
-                                                $schemaAttr,
-                                                $jsonldConfig,
-                                                $presentationID
-                                            );
+        if ($this->config->getSystemValue('oidc_login_use_sd_jwt', false)) {
+            $this->presentationDefinition = SdJwtPresentationExchangeHelper::createPresentationDefinition($presentationID);
+        } else {
+            $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
+            $acHelper = new AnoncredHelper($schemaConfig);
+            $schemaAttr = $acHelper->getSchemaAttributes();
+            $acHelper->close();
+            $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());
+            $this->presentationDefinition = PresentationExchangeHelper::createPresentationDefinition(
+                                                    $schemaConfig,
+                                                    $schemaAttr,
+                                                    $jsonldConfig,
+                                                    $presentationID
+                                                );
 
-        $this->registration = array(
-            'subject_identifier_types_supported' => array('jkt'),
-            'vp_formats' => array(
-                'ac_vp' => array(
-                    'proof_type' => array('CLSignature2019')
+            $this->registration = array(
+                'subject_identifier_types_supported' => array('jkt'),
+                'vp_formats' => array(
+                    'ac_vp' => array(
+                        'proof_type' => array('CLSignature2019')
+                    ),
+                    'ldp_vc' => array(
+                        'proof_type' => array('BbsBlsSignature2020')
+                    ),
+                    'ldp_vp' => array(
+                        'proof_type' => array('BbsBlsSignature2020')
+                    ),
                 ),
-                'ldp_vc' => array(
-                    'proof_type' => array('BbsBlsSignature2020')
-                ),
-                'ldp_vp' => array(
-                    'proof_type' => array('BbsBlsSignature2020')
-                ),
-            ),
-            'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
-        );
+                'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
+            );
+        }
     }
 
     public function createOnDevice(): string
@@ -90,7 +94,9 @@ class AuthenticationRequest
         
         if ($useRequestUri) {
             $arData['presentation_definition'] = $this->presentationDefinition;
-            $arData['registration'] = $this->registration;
+            if (!is_null($this->registration)) {
+                $arData['registration'] = $this->registration;
+            }
 
             // Create request object as JWT signed with the none algorithm
             $algorithmManager = new AlgorithmManager([new None()]);
