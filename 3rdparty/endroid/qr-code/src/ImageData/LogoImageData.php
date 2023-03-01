@@ -8,39 +8,14 @@ use Endroid\QrCode\Logo\LogoInterface;
 
 class LogoImageData
 {
-    /** @var string */
-    private $data;
-
-    /** @var mixed */
-    private $image;
-
-    /** @var string */
-    private $mimeType;
-
-    /** @var int */
-    private $width;
-
-    /** @var int */
-    private $height;
-
-    /** @var bool */
-    private $punchoutBackground;
-
-    /** @param mixed $image */
     private function __construct(
-        string $data,
-        $image,
-        string $mimeType,
-        int $width,
-        int $height,
-        bool $punchoutBackground
+        private string $data,
+        private \GdImage|null $image,
+        private string $mimeType,
+        private int $width,
+        private int $height,
+        private bool $punchoutBackground
     ) {
-        $this->data = $data;
-        $this->image = $image;
-        $this->mimeType = $mimeType;
-        $this->width = $width;
-        $this->height = $height;
-        $this->punchoutBackground = $punchoutBackground;
     }
 
     public static function createForLogo(LogoInterface $logo): self
@@ -68,7 +43,7 @@ class LogoImageData
             return new self($data, null, $mimeType, $width, $height, $logo->getPunchoutBackground());
         }
 
-        $image = imagecreatefromstring($data);
+        $image = @imagecreatefromstring($data);
 
         if (!$image) {
             throw new \Exception(sprintf('Unable to parse image data at path "%s"', $logo->getPath()));
@@ -97,9 +72,12 @@ class LogoImageData
         return $this->data;
     }
 
-    /** @return mixed */
-    public function getImage()
+    public function getImage(): \GdImage
     {
+        if (!$this->image instanceof \GdImage) {
+            throw new \Exception('SVG Images have no image resource');
+        }
+
         return $this->image;
     }
 
@@ -130,10 +108,7 @@ class LogoImageData
 
     private static function detectMimeTypeFromUrl(string $url): string
     {
-        /** @var mixed $format */
-        $format = PHP_VERSION > 80000 ? true : 1;
-
-        $headers = get_headers($url, $format);
+        $headers = get_headers($url, true);
 
         if (!is_array($headers) || !isset($headers['Content-Type'])) {
             throw new \Exception(sprintf('Content type could not be determined for logo URL "%s"', $url));

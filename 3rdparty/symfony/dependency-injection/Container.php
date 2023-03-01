@@ -36,11 +36,12 @@ class_exists(ArgumentServiceLocator::class);
  * The container can have four possible behaviors when a service
  * does not exist (or is not initialized for the last case):
  *
- *  * EXCEPTION_ON_INVALID_REFERENCE: Throws an exception (the default)
+ *  * EXCEPTION_ON_INVALID_REFERENCE: Throws an exception at compilation time (the default)
  *  * NULL_ON_INVALID_REFERENCE:      Returns null
  *  * IGNORE_ON_INVALID_REFERENCE:    Ignores the wrapping command asking for the reference
  *                                    (for instance, ignore a setter if the service does not exist)
  *  * IGNORE_ON_UNINITIALIZED_REFERENCE: Ignores/returns null for uninitialized services or invalid references
+ *  * RUNTIME_EXCEPTION_ON_INVALID_REFERENCE: Throws an exception at runtime
  *
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
@@ -97,7 +98,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Gets the service container parameter bag.
      *
-     * @return ParameterBagInterface A ParameterBagInterface instance
+     * @return ParameterBagInterface
      */
     public function getParameterBag()
     {
@@ -107,7 +108,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Gets a parameter.
      *
-     * @return array|bool|string|int|float|null
+     * @return array|bool|string|int|float|\UnitEnum|null
      *
      * @throws InvalidArgumentException if the parameter is not defined
      */
@@ -117,7 +118,7 @@ class Container implements ContainerInterface, ResetInterface
     }
 
     /**
-     * @return bool The presence of parameter in container
+     * @return bool
      */
     public function hasParameter(string $name)
     {
@@ -127,8 +128,8 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Sets a parameter.
      *
-     * @param string                           $name  The parameter name
-     * @param array|bool|string|int|float|null $value The parameter value
+     * @param string                                     $name  The parameter name
+     * @param array|bool|string|int|float|\UnitEnum|null $value The parameter value
      */
     public function setParameter(string $name, $value)
     {
@@ -184,7 +185,7 @@ class Container implements ContainerInterface, ResetInterface
      *
      * @param string $id The service identifier
      *
-     * @return bool true if the service is defined, false otherwise
+     * @return bool
      */
     public function has(string $id)
     {
@@ -204,7 +205,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Gets a service.
      *
-     * @return object|null The associated service
+     * @return object|null
      *
      * @throws ServiceCircularReferenceException When a circular reference is detected
      * @throws ServiceNotFoundException          When the service is not defined
@@ -277,7 +278,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Returns true if the given service has actually been initialized.
      *
-     * @return bool true if service has already been initialized, false otherwise
+     * @return bool
      */
     public function initialized(string $id)
     {
@@ -314,7 +315,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Gets all service ids.
      *
-     * @return string[] An array of all defined service ids
+     * @return string[]
      */
     public function getServiceIds()
     {
@@ -334,7 +335,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Camelizes a string.
      *
-     * @return string The camelized string
+     * @return string
      */
     public static function camelize(string $id)
     {
@@ -344,7 +345,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * A string to underscore.
      *
-     * @return string The underscored string
+     * @return string
      */
     public static function underscore(string $id)
     {
@@ -362,7 +363,7 @@ class Container implements ContainerInterface, ResetInterface
     /**
      * Fetches a variable from the environment.
      *
-     * @return mixed The value to use for the provided environment variable name
+     * @return mixed
      *
      * @throws EnvNotFoundException When the environment variable is not found and has no default value
      */

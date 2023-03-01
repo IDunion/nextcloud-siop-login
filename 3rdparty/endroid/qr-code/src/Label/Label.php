@@ -15,33 +15,22 @@ use Endroid\QrCode\Label\Margin\MarginInterface;
 
 final class Label implements LabelInterface
 {
-    /** @var string */
-    private $text;
-
-    /** @var FontInterface */
-    private $font;
-
-    /** @var LabelAlignmentInterface */
-    private $alignment;
-
-    /** @var MarginInterface */
-    private $margin;
-
-    /** @var ColorInterface */
-    private $textColor;
+    private FontInterface $font;
+    private LabelAlignmentInterface $alignment;
+    private MarginInterface $margin;
+    private ColorInterface $textColor;
 
     public function __construct(
-        string $text,
-        FontInterface $font = null,
-        LabelAlignmentInterface $alignment = null,
-        MarginInterface $margin = null,
-        ColorInterface $textColor = null
+        private string $text,
+        FontInterface|null $font = null,
+        LabelAlignmentInterface|null $alignment = null,
+        MarginInterface|null $margin = null,
+        ColorInterface|null $textColor = null
     ) {
-        $this->text = $text;
-        $this->font = isset($font) ? $font : new Font(__DIR__.'/../../assets/noto_sans.otf', 16);
-        $this->alignment = isset($alignment) ? $alignment : new LabelAlignmentCenter();
-        $this->margin = isset($margin) ? $margin : new Margin(0, 10, 10, 10);
-        $this->textColor = isset($textColor) ? $textColor : new Color(0, 0, 0);
+        $this->font = $font ?? new Font(__DIR__.'/../../assets/noto_sans.otf', 16);
+        $this->alignment = $alignment ?? new LabelAlignmentCenter();
+        $this->margin = $margin ?? new Margin(0, 10, 10, 10);
+        $this->textColor = $textColor ?? new Color(0, 0, 0);
     }
 
     public static function create(string $text): self

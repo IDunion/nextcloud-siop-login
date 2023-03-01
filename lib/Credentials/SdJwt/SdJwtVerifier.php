@@ -5,6 +5,7 @@ namespace OCA\OIDCLogin\Credentials\SdJwt;
 use OC\User\LoginException;
 
 use JsonPath\JsonObject;
+use idunion\sdjwt\SDJWT;
 use OCA\OIDCLogin\Helper\SdJwtPresentationExchangeHelper;
 
 
@@ -16,9 +17,10 @@ class SdJwtVerifier {
         }
 
         $getIssuerCallback = new GetIssuerKey();
-
+        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce);
+        $profile["email"] = $userClaims->credentialSubject->email;
         
-        return null;
+        return $profile;
     }
 
     

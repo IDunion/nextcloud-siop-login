@@ -300,6 +300,18 @@ class JsonPathTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 array(
+                    "The Lord of the Rings"
+                ),
+                "$..*[?(@.author =~ /.*tolkien/i)].title"
+            ),
+            array(
+                array(
+                    "The Lord of the Rings"
+                ),
+                "$..*[?(@.author =~ /  J.\ R.\ R.\ Tolkien  /x)].title"
+            ),
+            array(
+                array(
                     "red"
                 ),
                 "$..*[?(@.length <= 5)].color"
@@ -1024,5 +1036,12 @@ EOF;
         $this->assertEquals($jsonObject->{'$.store.bicycle'}, $bike->getValue());
 
         $this->assertFalse($jsonObject->getJsonObjects('$.abc'));
+    }
+
+    // Bug when using negative index triggers DivisionByZeroError
+    // https://github.com/Galbar/JsonPath-PHP/issues/60
+    public function testNegativeIndexOnEmptyArray() {
+        $object = new \JsonPath\JsonObject('{"data": []}');
+        $this->assertFalse($object->get('$.data[-1]'));
     }
 }

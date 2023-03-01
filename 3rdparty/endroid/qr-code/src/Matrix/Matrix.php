@@ -11,44 +11,34 @@ use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeShrink;
 
 final class Matrix implements MatrixInterface
 {
-    /** @var array<int, array<int, int>> */
-    private $blockValues = [];
-
-    /** @var float */
-    private $blockSize;
-
-    /** @var int */
-    private $innerSize;
-
-    /** @var int */
-    private $outerSize;
-
-    /** @var int */
-    private $marginLeft;
-
-    /** @var int */
-    private $marginRight;
+    private float $blockSize;
+    private int $innerSize;
+    private int $outerSize;
+    private int $marginLeft;
+    private int $marginRight;
 
     /** @param array<array<int>> $blockValues */
-    public function __construct(array $blockValues, int $size, int $margin, RoundBlockSizeModeInterface $roundBlockSizeMode)
-    {
-        $this->blockValues = $blockValues;
-
+    public function __construct(
+        private array $blockValues,
+        int $size,
+        int $margin,
+        RoundBlockSizeModeInterface $roundBlockSizeMode
+    ) {
         $this->blockSize = $size / $this->getBlockCount();
         $this->innerSize = $size;
         $this->outerSize = $size + 2 * $margin;
 
         if ($roundBlockSizeMode instanceof RoundBlockSizeModeEnlarge) {
             $this->blockSize = intval(ceil($this->blockSize));
-            $this->innerSize = $this->blockSize * $this->getBlockCount();
+            $this->innerSize = intval($this->blockSize * $this->getBlockCount());
             $this->outerSize = $this->innerSize + 2 * $margin;
         } elseif ($roundBlockSizeMode instanceof RoundBlockSizeModeShrink) {
             $this->blockSize = intval(floor($this->blockSize));
-            $this->innerSize = $this->blockSize * $this->getBlockCount();
+            $this->innerSize = intval($this->blockSize * $this->getBlockCount());
             $this->outerSize = $this->innerSize + 2 * $margin;
         } elseif ($roundBlockSizeMode instanceof RoundBlockSizeModeMargin) {
             $this->blockSize = intval(floor($this->blockSize));
-            $this->innerSize = $this->blockSize * $this->getBlockCount();
+            $this->innerSize = intval($this->blockSize * $this->getBlockCount());
         }
 
         if ($this->blockSize < 1) {

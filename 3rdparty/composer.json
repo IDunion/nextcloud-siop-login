@@ -11,6 +11,13 @@
 		"web-token/jwt-framework": "^2.2",
 		"galbar/jsonpath": "^2.0",
 		"guzzlehttp/guzzle": "^7.0",
-		"ramsey/uuid": "^4.2"
-	}
+		"ramsey/uuid": "^4.2",
+		"idunion/php-sd-jwt": "dev-main"
+	},
+	"repositories": [
+		{
+			"url": "git@github.com:IDunion/php-sd-jwt.git",
+			"type": "vcs"
+		}
+	]
 }
