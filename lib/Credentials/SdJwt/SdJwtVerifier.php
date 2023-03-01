@@ -15,15 +15,13 @@ class SdJwtVerifier {
             throw new LoginException('Presentation submission has an unexpected format or contains wrong values.');
         }
 
+        $getIssuerCallback = new GetIssuerKey();
+
         
         return null;
     }
 
-    public static function getIssuerKey(string $issuer): string {
-        // Assume $issuer is a DID JWK
-        $parts = explode(":", $issuer);
-        return base64_decode($parts[2]);
-    }
+    
 
     private static function verifyPresentationSubmission(JsonObject $ps, string $presentationSubmissionID): bool {
         if ($ps->get('$.definition_id') != $presentationSubmissionID) {
@@ -47,5 +45,13 @@ class SdJwtVerifier {
         }
 
         return true;
+    }
+}
+
+class GetIssuerKey {
+    public function __invoke($issuer) {
+        // Assume $issuer is a DID JWK
+        $parts = explode(":", $issuer);
+        return base64_decode($parts[2]);
     }
 }
