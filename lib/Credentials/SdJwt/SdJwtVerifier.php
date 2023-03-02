@@ -17,7 +17,7 @@ class SdJwtVerifier {
         }
 
         $getIssuerCallback = new GetIssuerKey();
-        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce);
+        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, FALSE);
         $profile["email"] = $userClaims->credentialSubject->email;
         
         return $profile;

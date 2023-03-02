@@ -8,6 +8,7 @@ use stdClass;
 use UnexpectedValueException;
 use Map;
 use PhpParser\Node\Expr\Cast\Bool_;
+use Traversable;
 
 final class SDJWT
 {
@@ -21,7 +22,7 @@ final class SDJWT
 
     // decodes input string
     // expects callback get_issuer_key that resolves from string issuer to issuer pubkey
-    public static function decode(string $raw, $get_issuer_key, string $expected_audience, string $nonce, ?bool $expect_holderbinding = TRUE): stdClass
+    public static function decode(string $raw, $get_issuer_key, string $expected_audience, string $nonce, ?bool $expect_holderbinding = TRUE): mixed
     {
         // split input and validate jwts
         $output = static::split($raw, $get_issuer_key, $expect_holderbinding);
@@ -57,7 +58,7 @@ final class SDJWT
         // Iterate through sd claims and create map of hashes and values
         foreach ($output->sdclaims as $value) {
             $hash_value =  static::base64_encode_urlsafe(hash($sd_alg, $value, true));
-            $attributes = static::base64_to_jwt($value);
+            $attributes = json_decode(static::base64_decode_urlsafe($value), false);
             if ($attributes == false) {
                 throw new UnexpectedValueException('unable to decode base64');
             }
@@ -65,31 +66,44 @@ final class SDJWT
         }
         $sd_claims_pointer = &$sd_claims;
         $jwt = &$output->jwt;
-        self::walk($jwt, $sd_claims_pointer);
-
+        $sd_claims_pointer = self::walk($jwt, $sd_claims_pointer);
+        // Check if all claims were used and return false if not
+        if(!empty($sd_claims_pointer)) {
+            throw new UnexpectedValueException('Could not resolve all claims');
+        }
         return $jwt;
     }
 
     // walks over the jwt and resolves claims and _sd elements
-    public static function walk(stdClass $object, $claims)
+    public static function walk($object, $claims): array
     {
         foreach ($object as $key => $value) {
             if ($key == self::SD_CLAIM) {
                 if (!is_array($value)) {
                     throw new UnexpectedValueException('_sd is not an array');
                 }
+                //check for hashes in disclosures
                 foreach ($value as $hash) {
                     if (isset($claims[$hash])) {
                         $attribute_name = $claims[$hash][1];
                         $attribute_value = $claims[$hash][2];
                         $object->$attribute_name = $attribute_value;
+                        unset($claims[$hash]);
                     }
                 }
                 unset($object->$key);
-            } elseif (is_object($value)) {
-                self::walk($value, $claims);
+            } else {
+                if(is_object($object)) {
+                    $ptr = &$object->$key;
+                } elseif (is_array($object)) {
+                    $ptr = &$object[$key];
+                }
+                if (is_array($ptr) || is_object($ptr) ||  $ptr instanceof Traversable) {
+                    $claims = self::walk($ptr, $claims);
+                }
             }
         }
+        return $claims;
     }
 
     public static function split(string $raw, $get_issuer_key, bool $expect_holderbinding = TRUE): SDJWT_Components

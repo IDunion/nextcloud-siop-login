@@ -3,7 +3,7 @@
         'name' => 'oidc_login/3rdparty',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'cd27a14e4b044448d4ca374090526b432665e9e5',
+        'reference' => 'e5c6a72930e88b75cc4753ae52038ff4e96e10ef',
         'type' => 'library',
         'install_path' => __DIR__ . '/../',
         'aliases' => array(),
@@ -103,7 +103,7 @@
         'idunion/php-sd-jwt' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'efcce018dde2821dcb1924a96e4d8c06b7bf7f9a',
+            'reference' => '525f7868d62dd4bb84d8e0fe0e30450f77d1d56b',
             'type' => 'library',
             'install_path' => __DIR__ . '/../idunion/php-sd-jwt',
             'aliases' => array(
@@ -114,7 +114,7 @@
         'oidc_login/3rdparty' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'cd27a14e4b044448d4ca374090526b432665e9e5',
+            'reference' => 'e5c6a72930e88b75cc4753ae52038ff4e96e10ef',
             'type' => 'library',
             'install_path' => __DIR__ . '/../',
             'aliases' => array(),
@@ -291,7 +291,7 @@
         'symfony/deprecation-contracts' => array(
             'pretty_version' => 'v3.2.1',
             'version' => '3.2.1.0',
-            'reference' => '0121954c80fd17c18cf050fe73360e63bb43d4fb',
+            'reference' => 'e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/deprecation-contracts',
             'aliases' => array(),
@@ -318,7 +318,7 @@
         'symfony/event-dispatcher-contracts' => array(
             'pretty_version' => 'v3.2.1',
             'version' => '3.2.1.0',
-            'reference' => '2265d0faa6d870182dd8c65e40d3dfbc34e79b26',
+            'reference' => '0ad3b6f1e4e2da5690fefe075cd53a238646d8dd',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/event-dispatcher-contracts',
             'aliases' => array(),

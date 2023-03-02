@@ -62,7 +62,7 @@ final class SDJWTTest extends TestCase
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
         $verified = file_get_contents(SDJWTTest::FIXTURES_DIR . "verified_contents.json");
-        $verified = json_decode($verified);
+        $verified = json_decode($verified, false, 512, JSON_BIGINT_AS_STRING);
         $this->assertEquals($verified, $out);
     }
 
@@ -74,7 +74,7 @@ final class SDJWTTest extends TestCase
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", false);
         $verified = file_get_contents(SDJWTTest::FIXTURES_DIR . "verified_complex.json");
-        $verified = json_decode($verified);
+        $verified = json_decode($verified, false, 512, JSON_BIGINT_AS_STRING);
         $this->assertEquals($verified, $out);
     }
 }
