@@ -8,7 +8,7 @@ use OC\User\LoginException;
 class AnoncredVerifier {
     public static function verify(string $vpTokenRaw, JsonObject $presentationSubmission, $schemaConfig, string $nonce, string $presentationID, $logger): array {
         $logger->debug('Processing Anoncred Credential');
-        $acHelper = new AnoncredHelper($schemaConfig);
+        $acHelper = new AnoncredHelper($schemaConfig, $logger);
         $acHelper->parseProof($presentationSubmission, $presentationID, $vpTokenRaw);
         if (!$acHelper->verifyAttributes($vpTokenRaw)) {
             $acHelper->close();
@@ -16,7 +16,7 @@ class AnoncredVerifier {
         }
 
         // Verify the signature of the Anoncred proof
-        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig, $logger);
+        $valid = $acHelper->verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig);
 
         if (!$valid->isValid()) {
             $acHelper->close();

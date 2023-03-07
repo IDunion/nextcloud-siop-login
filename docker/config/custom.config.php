@@ -36,19 +36,20 @@ $CONFIG = array (
       'name' => array('first_name', 'last_name', 'givenName', 'familyName'),
   ),
   'oidc_login_anoncred_config' => array(
-    'schema' => 'did:indy:idu:test:EE9WoUGQo38dmXyyP4bJqw:3:CL:9384:VerifiedEmail',
+    'schema' => 'did:indy:idu:test:BafYMQUtA7mm3bYY2rmMiZ:2:verified-email:1.2.3',
     'attributes' => array(
         'email'
       ),
   ),
   'oidc_login_jsonld_config' => array(
-    'type' => ["VerifiableCredential", "NextcloudCredential"],
+    'type' => 'https://agents.labor.gematik.de/credentials#NextcloudCredential',
     'claims' => array(
       'email', 'givenName', 'familyName'
     ),
     'verifier_uri' => 'http://verification-service:3000',
     'verifier_access_token' => 'sdzaZdlsOD50VuI8XwIFF8JaEq4gID'
   ),
+  'oidc_login_request_domain' => 'https://agents.labor.gematik.de/',
   'oidc_create_groups' => true,
   'oidc_login_disable_registration' => false,
   'oidc_login_tls_verify' => true,

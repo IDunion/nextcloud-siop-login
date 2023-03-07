@@ -18,9 +18,11 @@ class AnoncredHelper
     private $poolHandle;
     private $schema;
     private $credentialPath;
+    private $logger;
 
-    public function __construct($schemaConfig)
+    public function __construct($schemaConfig, $logger)
     {
+        $this->logger = $logger;
         $this->schemaHelper = new SchemaHelper($schemaConfig);
         $this->libIndy = new LibIndy();
 
@@ -37,6 +39,7 @@ class AnoncredHelper
         }
 
         $this->poolHandle = $this->libIndy->openPoolLedger($configName)->get();
+        $this->logger->debug("Created Indy SDK pool handle successfully");
     }
 
     public function close()
@@ -63,32 +66,35 @@ class AnoncredHelper
     public function getSchema(): ParseResponseResult
     {
         if (empty($this->schema)) {
+            $this->logger->debug("Build get scheme request. Submitter DID: " .  $this->schemaHelper->getSchemaDID() . " ID: " . $this->schemaHelper->getSchemaIdForIndy());
             $schemaRequest = $this->libIndy->buildGetSchemaRequest(
                 $this->schemaHelper->getSchemaDID(),
                 $this->schemaHelper->getSchemaIdForIndy()
             )->get();
+            $this->logger->debug("Schema request: " . $schemaRequest->getJson());
             $schemaResponseRaw = $this->libIndy->submitRequest($this->poolHandle, $schemaRequest)->get();
+            $this->logger->debug("Schema response raw: " . $schemaResponseRaw->getJson());
             $this->schema = $this->libIndy->parseGetSchemaResponse($schemaResponseRaw)->get();
         }
         return $this->schema;
     }
 
-    public function verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig, $logger): VerifierResult {
+    public function verifyProof($vpTokenRaw, $nonce, $presentationID, $schemaConfig): VerifierResult {
         $schemaAttr = $this->getSchemaAttributes();
         $proofRequest = PresentationExchangeHelper::createProofRequest($nonce, $schemaConfig, $schemaAttr, $presentationID);
         
-        $logger->debug('Anoncred proof request: ' . $proofRequest);
+        $this->logger->debug('Anoncred proof request: ' . $proofRequest);
         
         $schemaResponse = $this->getSchema();
         $schemas = json_encode(array(
             $schemaResponse->getId() => json_decode($schemaResponse->getJson())
         ));
-        $logger->debug('Anoncred verification - schemas: ' . $schemas);
+        $this->logger->debug('Anoncred verification - schemas: ' . $schemas);
         $credDefResponse = $this->getCredDef();
         $credentials = json_encode(array(
             $credDefResponse->getId() => json_decode($credDefResponse->getJson())
         ));
-        $logger->debug('Anoncred verification - credentials: ' . $credentials);
+        $this->logger->debug('Anoncred verification - credentials: ' . $credentials);
 
         return $this->libIndy->verifierVerifyProof($proofRequest, $vpTokenRaw, $schemas, $credentials, "{}", "{}")->get();
     }

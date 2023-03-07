@@ -1,4 +1,4 @@
-FROM nextcloud:25.0.3
+FROM nextcloud:25.0.4
 
 RUN apt-get update 
 RUN apt-get install -y \
