@@ -30,12 +30,7 @@ use OCA\OIDCLogin\Credentials\Anoncreds\AnoncredVerifier;
 
 require_once __DIR__ . '/../../3rdparty/autoload.php';
 
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
-use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
-use Endroid\QrCode\Writer\SvgWriter;
-
+use chillerlan\QRCode\QRCode;
 use Ramsey\Uuid\Uuid;
 
 use JsonPath\JsonObject;
@@ -144,17 +139,7 @@ class LoginController extends Controller
         $arUrlPost = $ar->createCrossDevice();
         $this->logger->debug('Created cross-device authentication requests: '. $arUrlPost);
 
-        $arUrlAsQrCode = Builder::create()
-            ->writer(new SvgWriter())
-            ->writerOptions([SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true])
-            ->data($arUrlPost)
-            ->encoding(new Encoding('ISO-8859-1'))
-            ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->size(300)
-            ->margin(0)
-            ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-            ->build()
-            ->getDataUri();
+        $arUrlAsQrCode = (new QRCode())->render($arUrlPost);
 
         $arUrl = $ar->createOnDevice();
         $this->logger->debug('Created on-device authentication requests: '. $arUrl);

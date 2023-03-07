@@ -20,7 +20,7 @@ plugin.
 - Open a terminal in the root directory of this repository
 - Run ``docker/install.sh`` to prepare the Nextcloud installation.
 - Build the JSON-LD BBS+ verification service docker container ([separate project](https://github.com/IDunion/jsonld-bbs-verification-service))
-- Run ``docker-compose -f docker/docker-compose.yml up`` to build and start the Nextcloud instance with the SIOP plugin.
+- Run ``docker-compose -f docker/docker-compose-sd-jwt.yml up`` to build and start the Nextcloud instance with the SIOP plugin.
 - If you use ngrok for the first time, initialize it with: ``./ngrok authtoken <TOKEN>``
 - Run ``./ngrok http 80`` and visit the HTTPS url that is displayed in the terminal
 - On first start you have to setup the Nextcloud instance.

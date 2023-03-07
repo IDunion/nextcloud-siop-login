@@ -7,12 +7,12 @@
 		"classmap-authoritative": true
 	},
 	"require": {
-		"endroid/qr-code": "^4.2",
 		"web-token/jwt-framework": "^2.2",
 		"galbar/jsonpath": "^2.0",
 		"guzzlehttp/guzzle": "^7.0",
 		"ramsey/uuid": "^4.2",
-		"idunion/php-sd-jwt": "dev-main"
+		"idunion/php-sd-jwt": "dev-main",
+		"chillerlan/php-qrcode": "^4.3"
 	},
 	"repositories": [
 		{
