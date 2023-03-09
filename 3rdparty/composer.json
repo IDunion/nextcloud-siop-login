@@ -1,6 +1,6 @@
 {
-	"name": "oidc_login/3rdparty",
-	"description": "3rdparty components for oidc_login",
+	"name": "ssi_login/3rdparty",
+	"description": "3rdparty components for ssi_login",
 	"config": {
 		"vendor-dir": ".",
 		"optimize-autoloader": true,

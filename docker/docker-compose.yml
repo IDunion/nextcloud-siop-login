@@ -16,6 +16,7 @@ services:
       - "$PWD/docker/data:/var/www/html/data"
       - "$PWD/docker/apps:/var/www/html/custom_apps"
       - "$PWD:/var/www/html/custom_apps/ssi_login"
+      - "$PWD/docker/multi-cred.config.php:/var/www/html/config/multi-cred.config.php"
   
   verification-service:
     image: verification-service

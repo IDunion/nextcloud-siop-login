@@ -36,7 +36,7 @@ class AuthenticationRequest
             $this->presentationDefinition = SdJwtPresentationExchangeHelper::createPresentationDefinition($presentationID);
         } else {
             $schemaConfig = $this->config->getSystemValue('oidc_login_anoncred_config', array());
-            $acHelper = new AnoncredHelper($schemaConfig);
+            $acHelper = new AnoncredHelper($schemaConfig, $logger);
             $schemaAttr = $acHelper->getSchemaAttributes();
             $acHelper->close();
             $jsonldConfig = $this->config->getSystemValue('oidc_login_jsonld_config', array());

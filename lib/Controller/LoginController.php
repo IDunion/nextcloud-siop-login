@@ -118,7 +118,7 @@ class LoginController extends Controller
         }
         
         // Generate nonce compatible with the IndySDK
-        $nonce = strval(random_int(1000000000, 9999999999)) . strval(random_int(1000000000, 9999999999));
+        $nonce = strval(random_int(0, 9223372036854775807)) . strval(random_int(0, 9223372036854775807));
         $this->session['nonce'] = $nonce;
 
         // Generate UUID4 as presentation ID

@@ -11,3 +11,4 @@ services:
       - "$PWD/docker/data:/var/www/html/data"
       - "$PWD/docker/apps:/var/www/html/custom_apps"
       - "$PWD:/var/www/html/custom_apps/ssi_login"
+      - "$PWD/docker/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"

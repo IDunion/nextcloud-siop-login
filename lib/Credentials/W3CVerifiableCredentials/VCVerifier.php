@@ -24,6 +24,12 @@ class VCVerifier {
         $presentation = $vpToken->getJsonObjects($presentationSubmission->get('$.descriptor_map[0].path'));
         $credential = $presentation->getJsonObjects($presentationSubmission->get('$.descriptor_map[0].path_nested.path'));
 
+        // Check type of presentation
+        if ($presentation->get('$.type') != array("VerifiablePresentation")) {
+            $logger->error('Could not verify W3C presentation: Wrong type');
+            throw new LoginException('Could not verify W3C presentation: Wrong type');
+        }
+
         // Check if nonce is correct
         // TODO remove preset nonce parameter
         $nonce = "challenge";
@@ -34,7 +40,7 @@ class VCVerifier {
         }
 
         // Check if the credential has the correct type
-        $typeConfigured = $jsonLDConfig['type'];
+        $typeConfigured = array($jsonLDConfig['type'], "VerifiableCredential");
         $typeFound = $credential->get('$.type');
         if (!(count($typeFound) == count($typeConfigured) && !array_diff($typeFound, $typeConfigured))) {
             $logger->error('Could not verify W3C credential: Wrong type');

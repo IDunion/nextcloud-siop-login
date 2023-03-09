@@ -5,8 +5,8 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../',
         'aliases' => array(),
-        'reference' => 'bf278d592875b7555829dacbf8c1d517497df063',
-        'name' => 'oidc_login/3rdparty',
+        'reference' => '10bc3f6681db15474a5d976a5c405ef6b34bb9ff',
+        'name' => 'ssi_login/3rdparty',
         'dev' => true,
     ),
     'versions' => array(
@@ -100,15 +100,6 @@
                 0 => '9999999-dev',
             ),
             'reference' => '525f7868d62dd4bb84d8e0fe0e30450f77d1d56b',
-            'dev_requirement' => false,
-        ),
-        'oidc_login/3rdparty' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../',
-            'aliases' => array(),
-            'reference' => 'bf278d592875b7555829dacbf8c1d517497df063',
             'dev_requirement' => false,
         ),
         'psr/container' => array(
@@ -250,6 +241,15 @@
             'install_path' => __DIR__ . '/../spomky-labs/base64url',
             'aliases' => array(),
             'reference' => '7752ce931ec285da4ed1f4c5aa27e45e097be61d',
+            'dev_requirement' => false,
+        ),
+        'ssi_login/3rdparty' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../',
+            'aliases' => array(),
+            'reference' => '10bc3f6681db15474a5d976a5c405ef6b34bb9ff',
             'dev_requirement' => false,
         ),
         'symfony/config' => array(
