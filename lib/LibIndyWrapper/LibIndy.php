@@ -23,7 +23,7 @@ final class LibIndy {
         $result = self::$ffi->indy_issuer_create_schema($future->getQueueKey(), $did, $name, $version, $attr, [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -43,7 +43,7 @@ final class LibIndy {
         $result = self::$ffi->indy_create_pool_ledger_config($future->getQueueKey(), $configName, $config,  [__CLASS__, "voidCb"]);
     
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -54,7 +54,7 @@ final class LibIndy {
         $result = self::$ffi->indy_delete_pool_ledger_config($future->getQueueKey(), $configName, [__CLASS__, "voidCb"]);
     
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -65,7 +65,7 @@ final class LibIndy {
         $result = self::$ffi->indy_close_pool_ledger($future->getQueueKey(), $pool->getPoolHandle(), [__CLASS__, "voidCb"]);
     
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -81,7 +81,7 @@ final class LibIndy {
         $result = self::$ffi->indy_open_pool_ledger($future->getQueueKey(), $configName, $config, [__CLASS__, "openPoolCb"]);
         
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -97,7 +97,7 @@ final class LibIndy {
         $result = self::$ffi->indy_build_get_schema_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -108,7 +108,7 @@ final class LibIndy {
         $result = self::$ffi->indy_submit_request($future->getQueueKey(), $pool->getPoolHandle(), $requestObject->getJson(), [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -119,7 +119,7 @@ final class LibIndy {
         $result = self::$ffi->indy_parse_get_schema_response($future->getQueueKey(), $getSchemaResponse->getJson(), [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -130,7 +130,7 @@ final class LibIndy {
         $result = self::$ffi->indy_build_get_cred_def_request($future->getQueueKey(), $submitterDid, $id, [__CLASS__, "stringCb"]);
         
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -141,7 +141,7 @@ final class LibIndy {
         $result = self::$ffi->indy_parse_get_cred_def_response($future->getQueueKey(), $getCredDefResponse->getJson(), [__CLASS__, "parseResponseCb"]);
 
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -157,7 +157,7 @@ final class LibIndy {
         $result = self::$ffi->indy_verifier_verify_proof($future->getQueueKey(), $proofRequestJson, $proofJson, $schemasJson, $credentialDefsJsons, $revRegDefsJson, $revRegsJson,  [__CLASS__, "verifyProofCb"]);
     
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
 
         return $future;
@@ -170,7 +170,7 @@ final class LibIndy {
         $result = self::$ffi->indy_set_default_logger($pattern);
     
         if ($result != 0) {
-            throw new LibIndyException(NULL, $result);
+            throw new LibIndyException("", $result);
         }
     }
 }
@@ -269,7 +269,7 @@ class Future {
         \msg_receive($this->queue, $this->msg_type, $received_msg_type, 65536, $this->msg);
         \msg_remove_queue($this->queue);
         if (!$this->msg->success()) {
-            throw new LibIndyException(NULL, $this->msg->getError());
+            throw new LibIndyException("", $this->msg->getError());
         }
         return $this->msg;
     }

@@ -23,7 +23,7 @@ class AuthenticationRequest
     private $presentationDefinition;
     private $registration = Null;
 
-    public function __construct($appName, $urlGenerator, $timeFactory, $config, $requestObjectMapper, $nonce, $presentationID)
+    public function __construct($appName, $urlGenerator, $timeFactory, $config, $requestObjectMapper, $nonce, $presentationID, $logger)
     {
         $this->appName = $appName;
         $this->urlGenerator = $urlGenerator;
@@ -48,7 +48,6 @@ class AuthenticationRequest
                                                 );
 
             $this->registration = array(
-                'subject_identifier_types_supported' => array('jkt'),
                 'vp_formats' => array(
                     'ac_vp' => array(
                         'proof_type' => array('CLSignature2019')
@@ -60,7 +59,6 @@ class AuthenticationRequest
                         'proof_type' => array('BbsBlsSignature2020')
                     ),
                 ),
-                'id_token_signing_alg_values_supported' => array('ES384', 'RS256'),
             );
         }
     }
@@ -81,6 +79,8 @@ class AuthenticationRequest
 
     private function createAuthenticationRequest($redirectUri, $useRequestUri, $responseMode = null): string
     {
+        $schema = $this->config->getSystemValue('oidc_login_request_domain', 'openid://');
+
         $arData = array(
             'response_type' => 'vp_token',
             'client_id' => $redirectUri,
@@ -126,12 +126,12 @@ class AuthenticationRequest
             // After JAR specification
             $arDataRequestUri['client_id'] = $redirectUri;
             $arDataRequestUri['request_uri'] = $requestUri;
-            return "openid://?" . http_build_query($arDataRequestUri);
+            return $schema . "?" . http_build_query($arDataRequestUri);
         } else {
             $arData['presentation_definition'] = json_encode($this->presentationDefinition);
             $arData['registration'] = json_encode($this->registration);
 
-            return "openid://?" . http_build_query($arData);
+            return $schema . "?" . http_build_query($arData);
         }
     }
 }

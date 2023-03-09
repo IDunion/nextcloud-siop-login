@@ -39,7 +39,6 @@ use OCA\OIDCLogin\Helper\PresentationExchangeHelper;
 use OCA\OIDCLogin\Helper\SdJwtPresentationExchangeHelper;
 use OCA\OIDCLogin\Credentials\SdJwt\SdJwtVerifier;
 
-use function Safe\json_decode;
 
 class LoginController extends Controller
 {
@@ -133,7 +132,8 @@ class LoginController extends Controller
             $this->config,
             $this->requestObjectMapper,
             $nonce,
-            $presentationID
+            $presentationID,
+            $this->logger
         );
 
         $arUrlPost = $ar->createCrossDevice();
