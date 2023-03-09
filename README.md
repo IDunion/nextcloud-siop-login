@@ -24,13 +24,13 @@ plugin.
 
 **Option 1: SD-JWT:**
 
-- Run ``docker-compose -f docker/docker-compose-sd-jwt.yml up`` to start the Nextcloud with the SSI plugin.
+- Run ``docker-compose -f docker/docker-compose-sd-jwt.yml up`` to start the Nextcloud instance with the SSI plugin.
 
 ---
 
 **Option 2: Anoncreds and JSON-LD with BBS+:**
 
-- Build the JSON-LD BBS+ verification service docker container ([separate project](https://github.com/IDunion/jsonld-bbs-verification-service))
+- Build the JSON-LD BBS+ verification service docker container (``nextcloud-credential`` branch) ([separate project](https://github.com/IDunion/jsonld-bbs-verification-service/tree/nextcloud-credential))
 - Run ``docker-compose -f docker/docker-compose.yml up`` to build and start the Nextcloud instance with the SSI plugin.
 
 ---
