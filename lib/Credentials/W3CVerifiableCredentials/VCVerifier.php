@@ -31,16 +31,13 @@ class VCVerifier {
         }
 
         // Check if nonce is correct
-        // TODO remove preset nonce parameter
-        $nonce = "challenge";
-        
         if ($presentation->get('$.proof.challenge') != $nonce) {
             $logger->error('Could not verify W3C Credential: Wrong nonce');
             throw new LoginException('Could not verify W3C Credential: Wrong nonce');
         }
 
         // Check if the credential has the correct type
-        $typeConfigured = array($jsonLDConfig['type'], "VerifiableCredential");
+        $typeConfigured = array("VerifiableCredential", "NextcloudCredential");
         $typeFound = $credential->get('$.type');
         if (!(count($typeFound) == count($typeConfigured) && !array_diff($typeFound, $typeConfigured))) {
             $logger->error('Could not verify W3C credential: Wrong type');
