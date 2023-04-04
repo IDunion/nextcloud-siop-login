@@ -6,8 +6,6 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
 use stdClass;
 use UnexpectedValueException;
-use Map;
-use PhpParser\Node\Expr\Cast\Bool_;
 use Traversable;
 
 final class SDJWT
@@ -55,7 +53,7 @@ final class SDJWT
         }
         $sd_alg = self::SUPPORTED_SD_ALGS[$sd_alg];
         $sd_claims = [];
-        // Iterate through sd claims and create map of hashes and values
+        // Iterate through disclosures and create map of hashes and values
         foreach ($output->sdclaims as $value) {
             $hash_value =  static::base64_encode_urlsafe(hash($sd_alg, $value, true));
             $attributes = json_decode(static::base64_decode_urlsafe($value), false);
@@ -67,10 +65,12 @@ final class SDJWT
         $sd_claims_pointer = &$sd_claims;
         $jwt = &$output->jwt;
         $sd_claims_pointer = self::walk($jwt, $sd_claims_pointer);
-        // Check if all claims were used and return false if not
-        if(!empty($sd_claims_pointer)) {
+        // Check if all disclosures were used and return false if not
+        if (!empty($sd_claims_pointer)) {
             throw new UnexpectedValueException('Could not resolve all claims');
         }
+        // Remove _sd_alg claim
+        unset($jwt->_sd_alg);
         return $jwt;
     }
 
@@ -88,22 +88,30 @@ final class SDJWT
                         $attribute_name = $claims[$hash][1];
                         $attribute_value = $claims[$hash][2];
                         $object->$attribute_name = $attribute_value;
+                        $ptr = &$object->$attribute_name;
+                        if(self::isWalkable($ptr)) {
+                            $claims = self::walk($ptr, $claims);
+                        }
                         unset($claims[$hash]);
                     }
                 }
                 unset($object->$key);
             } else {
-                if(is_object($object)) {
+                if (is_object($object)) {
                     $ptr = &$object->$key;
                 } elseif (is_array($object)) {
                     $ptr = &$object[$key];
                 }
-                if (is_array($ptr) || is_object($ptr) ||  $ptr instanceof Traversable) {
+                if(self::isWalkable($ptr)) {
                     $claims = self::walk($ptr, $claims);
                 }
             }
         }
         return $claims;
+    }
+
+    private static function isWalkable($ptr): bool {
+        return (is_array($ptr) || is_object($ptr) ||  $ptr instanceof Traversable);
     }
 
     public static function split(string $raw, $get_issuer_key, bool $expect_holderbinding = TRUE): SDJWT_Components

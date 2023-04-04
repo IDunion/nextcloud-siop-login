@@ -6,7 +6,6 @@
     "credentialSubject": {
       "email": "test@example.com"
     },
-    "_sd_alg": "sha-256",
     "cnf": {
       "jwk": {
         "kty": "EC",

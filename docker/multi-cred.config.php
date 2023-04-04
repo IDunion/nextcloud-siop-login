@@ -45,7 +45,7 @@ $CONFIG = array (
   'oidc_login_jsonld_config' => array(
     'type' => 'https://agents.labor.gematik.de/credentials#NextcloudCredential',
     'claims' => array(
-      'email', 'givenName', 'familyName'
+      'email'
     ),
     'verifier_uri' => 'http://verification-service:3000',
     'verifier_access_token' => 'sdzaZdlsOD50VuI8XwIFF8JaEq4gID'

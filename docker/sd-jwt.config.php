@@ -50,7 +50,7 @@ $CONFIG = array (
     'verifier_uri' => 'http://verification-service:3000',
     'verifier_access_token' => 'sdzaZdlsOD50VuI8XwIFF8JaEq4gID'
   ),
-  'oidc_login_request_domain' => 'openid://',
+  'oidc_login_request_domain' => 'openid4vp://',
   'oidc_create_groups' => true,
   'oidc_login_disable_registration' => false,
   'oidc_login_tls_verify' => true,
