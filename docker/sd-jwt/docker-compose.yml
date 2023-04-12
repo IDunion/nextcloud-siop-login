@@ -2,7 +2,7 @@ version: "3"
 
 services:
   nextcloud:
-    image: .
+    build: .
     #ports:
     #  - 80:80
     user: 1000:1000
