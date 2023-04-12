@@ -9,6 +9,6 @@ services:
     volumes:
       - "/data/nextcloud/config:/var/www/html/config"
       - "/data/nextcloud/data:/var/www/html/data"
-      - "/data/nextcloud/custom_apps:/var/www/html/custom_apps"
-      - "$PWD/../../:/var/www/html/custom_apps/ssi_login"
-      - "$PWD/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"
+      #- "/data/nextcloud/custom_apps:/var/www/html/custom_apps"
+      #- "$PWD/../../:/var/www/html/custom_apps/ssi_login"
+      #- "$PWD/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"
