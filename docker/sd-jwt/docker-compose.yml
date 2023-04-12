@@ -7,9 +7,9 @@ services:
     #  - 80:80
     user: 1000:1000
     volumes:
-      - "nextcloud-config:/var/www/html/config"
-      - "nextcloud-data:/var/www/html/data"
-      - "nextcloud-apps:/var/www/html/custom_apps"
+      - "nextcloud_config:/var/www/html/config"
+      - "nextcloud_data:/var/www/html/data"
+      - "nextcloud_apps:/var/www/html/custom_apps"
     #  - "$PWD:/var/www/html/custom_apps/ssi_login"
     #  - "$PWD/docker/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"
 
