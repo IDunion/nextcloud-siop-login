@@ -3,3 +3,4 @@ FROM nextcloud:25.0.4
 #COPY . /var/www/html/custom_apps/ssi_login
 #COPY sd-jwt.config.php /var/www/html/config/
 
+RUN useradd -m -u 1000 nextcloud
