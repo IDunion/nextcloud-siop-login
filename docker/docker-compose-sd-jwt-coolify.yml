@@ -3,8 +3,8 @@ version: "3"
 services:
   nextcloud:
     image: nextcloud:25.0.4
-    ports:
-      - 80:80
+    #ports:
+    #  - 80:80
     user: 1000:1000
     volumes:
       - "$PWD/docker/config:/var/www/html/config"
