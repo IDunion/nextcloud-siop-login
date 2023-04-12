@@ -8,6 +8,6 @@ RUN git clone https://github.com/IDunion/nextcloud-siop-login.git && \
         cp nextcloud-siop-login/docker/sd-jwt.config.php /var/www/html/config/ && \
         mkdir -p /var/www/html/apps/ && \
         mv nextcloud-siop-login/ /var/www/html/apps/ssi_login/ && \
-        chown -R 1000:1000 /var/www/html/apps/ssi_login/
+        chown -R 1000:1000 /var/www/html/apps/
 
 RUN useradd -m -u 1000 nextcloud
