@@ -15,6 +15,8 @@ RUN apt update
 RUN apt install -y libindy libindy-dev
 
 COPY php-custom.ini /usr/local/etc/php/conf.d/
+COPY . /var/www/html/custom_apps/ssi_login
+COPY sd-jwt.config.php /var/www/html/config/
 
 RUN sed -i 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf
 

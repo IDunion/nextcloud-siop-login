@@ -10,8 +10,8 @@ services:
       - "nextcloud-config:/var/www/html/config"
       - "nextcloud-data:/var/www/html/data"
       - "nextcloud-apps:/var/www/html/custom_apps"
-      - "$PWD:/var/www/html/custom_apps/ssi_login"
-      - "$PWD/docker/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"
+    #  - "$PWD:/var/www/html/custom_apps/ssi_login"
+    #  - "$PWD/docker/sd-jwt.config.php:/var/www/html/config/sd-jwt.config.php"
 
 volumes:
   nextcloud_data:
