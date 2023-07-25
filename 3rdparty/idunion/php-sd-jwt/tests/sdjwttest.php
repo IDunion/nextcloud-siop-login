@@ -2,8 +2,11 @@
 
 namespace idunion\sdjwt;
 
+use Firebase\JWT\JWT;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
+
+JWT::$timestamp = 1685254200;
 
 final class SDJWTTest extends TestCase
 {
@@ -15,7 +18,7 @@ final class SDJWTTest extends TestCase
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation.txt");
         // test key resolution function
-        $out = SDJWT::split($input, function (string $issuer): string {
+        $out = SDJWT::split($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         });
@@ -28,7 +31,7 @@ final class SDJWTTest extends TestCase
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation.txt");
         $this->expectException(UnexpectedValueException::class);
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "invalid", "XZOUco1u_gEPknxS78sWWg", true);
@@ -37,7 +40,7 @@ final class SDJWTTest extends TestCase
     public function testDecodeValidAudience()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
@@ -47,7 +50,7 @@ final class SDJWTTest extends TestCase
     public function testSecondPresentation()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_2.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
@@ -57,7 +60,7 @@ final class SDJWTTest extends TestCase
     public function testDecodeValidOutput()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
@@ -69,7 +72,7 @@ final class SDJWTTest extends TestCase
     public function testDecodeValidOutputComplex()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_complex.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", false);
@@ -81,7 +84,7 @@ final class SDJWTTest extends TestCase
     public function testDecodeValidOutputRecursive()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_recursive.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", false);
@@ -93,7 +96,7 @@ final class SDJWTTest extends TestCase
     public function testDecodeValidOutputRecursiveReverseOrder()
     {
         $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_recursive_order.txt");
-        $out = SDJWT::decode($input, function (string $issuer): string {
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", false);
