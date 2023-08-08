@@ -124,13 +124,24 @@ final class SDJWT
 
         // manually extract issuer from jwt
         $out = explode(self::SEPARATOR_JWT, $jwt_raw);
+
+        // get kid from header if available
+        $header = static::base64_to_jwt($out[0]);
+        if ($header == false) {
+            throw new UnexpectedValueException('Could not decode jwt header');
+        }
+        $kid = "";
+        if (isset($header['kid'])) {
+            $kid = $header['kid'];
+        }
+
         if (count($out) < 2) {
             throw new UnexpectedValueException('Unexpected Format of JWT, expected more elements');
         }
         // convert from urlsafe base64 to base64
         $jwt = static::base64_to_jwt($out[1]);
         if ($jwt == false) {
-            throw new UnexpectedValueException('Could not decode jwt');
+            throw new UnexpectedValueException('Could not decode jwt payload');
         }
 
         if (!isset($jwt['iss'])) {
@@ -138,7 +149,7 @@ final class SDJWT
         }
         $iss = $jwt['iss'];
         // call the callback to resolve the issuer key (in JWK string format)
-        $issuer_key_raw = call_user_func($get_issuer_key, $iss);
+        $issuer_key_raw = call_user_func($get_issuer_key, $iss, $kid);
         if ($issuer_key_raw == null || $issuer_key_raw == "") {
             throw new UnexpectedValueException('Issuer key does not exist');
         }

@@ -20,6 +20,7 @@ $CONFIG = array (
       0 => 'localhost:8080',
       1 => '*.ngrok.io',
       2 => 'desktop.local.fcloud.ovh',
+      3 => '*.ngrok-free.app'
   ),
   'memcache.local' => '\OC\Memcache\APCu',
   'overwriteprotocol' => 'https',
@@ -49,6 +50,11 @@ $CONFIG = array (
     ),
     'verifier_uri' => 'http://verification-service:3000',
     'verifier_access_token' => 'sdzaZdlsOD50VuI8XwIFF8JaEq4gID'
+  ),
+  'oidc_login_sdjwt_config' => array(
+    'trusted_issuers' => array(
+      'https://issuer-openid4vc.ssi.tir.budru.de',
+    ),
   ),
   'oidc_login_request_domain' => 'openid4vp://',
   'oidc_create_groups' => true,
