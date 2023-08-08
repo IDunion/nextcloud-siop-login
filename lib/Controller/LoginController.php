@@ -309,13 +309,15 @@ class LoginController extends Controller
             /********************************************************************************
              * Process SD-JWT credential
              ********************************************************************************/
+            $sdJwtConfig = $this->config->getSystemValue('oidc_login_sdjwt_config', array());
             $profile = SdJwtVerifier::verify(
                 $vpTokenRaw,
                 $ps,
                 $presentationIdFromSession,
                 $nonceFromSession,
                 $redirectUri,
-                $this->logger
+                $sdJwtConfig,
+                $this->logger,
             );
         } else {
             $this->logger->debug('presentation_submission does not contain a valid Presentation Submission: '.$ps->getJson());
