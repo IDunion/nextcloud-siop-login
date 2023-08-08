@@ -20,7 +20,8 @@ $CONFIG = array (
       0 => 'localhost:8080',
       1 => '*.ngrok.io',
       2 => 'desktop.local.fcloud.ovh',
-      3 => '*.ngrok-free.app'
+      3 => '*.ngrok-free.app',
+      4 => 'nc-sd-jwt.lambda.d3f.me'
   ),
   'memcache.local' => '\OC\Memcache\APCu',
   'overwriteprotocol' => 'https',
