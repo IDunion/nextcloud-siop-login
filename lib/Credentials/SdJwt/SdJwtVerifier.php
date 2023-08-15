@@ -95,14 +95,14 @@ class GetIssuerKey {
         if (isset($decoded->jwks)) {
             $jwks = $decoded->jwks;
         } else {
-            $jwks = file_get_contents($decoded->jwks_uri);
+            $jwks_raw = file_get_contents($decoded->jwks_uri);
+            $jwks = json_decode($jwks_raw, false);
             if (!$jwks) {
                 return "";
             }
         }
         // walk the jwks and find correct kid
-        $jwks_decoded = json_decode($jwks, false);
-        foreach ($jwks_decoded->keys as $key){
+        foreach ($jwks->keys as $key){
             if ($key->kid == $kid) {
                 return json_encode($key);
             }
