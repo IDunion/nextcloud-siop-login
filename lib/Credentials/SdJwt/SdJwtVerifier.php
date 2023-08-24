@@ -63,7 +63,7 @@ class GetIssuerKey {
         $this->logger->debug('getkey: ' . $issuer . " -> " . json_encode($kid));
         // check if in trusted_issuers
         if (!$this->is_trusted($issuer)) {
-            return "";
+            throw new LoginException('issuer is not trusted');
         }
 
         // Switch depending on prefix
@@ -76,6 +76,10 @@ class GetIssuerKey {
     }
 
     private function is_trusted($issuer): bool {
+        // remove trailing slash if https is used
+        if (str_starts_with($issuer, "https://")) {
+            $issuer = rtrim($issuer, "/");
+        }
         return in_array( $issuer, $this->trusted_issuers);
     }
 
@@ -88,6 +92,7 @@ class GetIssuerKey {
     // get issuer/.well-known/jwt-issuer
     // follow jwks_uri if it exists
     private function web(string $issuer, string $kid): string {
+        $issuer = rtrim($issuer, "/");
         $url = $issuer . "/.well-known/jwt-issuer";
         $content = file_get_contents($url);
         $decoded = json_decode($content, false);
@@ -98,7 +103,7 @@ class GetIssuerKey {
             $jwks_raw = file_get_contents($decoded->jwks_uri);
             $jwks = json_decode($jwks_raw, false);
             if (!$jwks) {
-                return "";
+                throw new LoginException('could not decode jwks');
             }
         }
         // walk the jwks and find correct kid
@@ -107,6 +112,6 @@ class GetIssuerKey {
                 return json_encode($key);
             }
         }
-        return "";
+        throw new LoginException('kid not found at /.well-known/jwt-issuer');
     }
 }
