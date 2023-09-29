@@ -4,9 +4,11 @@ namespace idunion\sdjwt;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
+use Firebase\JWT\Key;
 use stdClass;
 use UnexpectedValueException;
 use Traversable;
+use idunion\sdjwt\StatusList;
 
 final class SDJWT
 {
@@ -20,7 +22,7 @@ final class SDJWT
 
     // decodes input string
     // expects callback get_issuer_key that resolves from string issuer to issuer pubkey
-    public static function decode(string $raw, $get_issuer_key, string $expected_audience, string $nonce, ?bool $expect_holderbinding = TRUE): mixed
+    public static function decode(string $raw, $get_issuer_key, string $expected_audience, string $nonce, ?bool $expect_holderbinding = TRUE, ?bool $check_statuslist = FALSE): mixed
     {
         // split input and validate jwts
         $output = static::split($raw, $get_issuer_key, $expect_holderbinding);
@@ -71,6 +73,18 @@ final class SDJWT
         }
         // Remove _sd_alg claim
         unset($jwt->_sd_alg);
+
+        // Check for status list
+        if ($check_statuslist) {
+            if(!StatusList::has_status($jwt)) {
+                throw new UnexpectedValueException('Expected status claim but not found');
+            }
+            $statuslist = new StatusList(StatusList::get_uri($jwt), $output->issuer_key);
+            $status = $statuslist->get(StatusList::get_idx($jwt));
+            if($status != 0) {
+                throw new UnexpectedValueException('Status not valid');
+            }
+        }
         return $jwt;
     }
 
@@ -157,6 +171,7 @@ final class SDJWT
         $issuer_jwk = JWK::parseKey($issuer_key, "ES256");
 
         $output = new SDJWT_Components();
+        $output->issuer_key = $issuer_jwk;
 
         if ($expect_holderbinding) {
             // get the cnf element to find the holder binding
@@ -209,4 +224,5 @@ final class SDJWT_Components
     public stdClass $jwt;
     public $sdclaims = array();
     public stdClass $proof_of_posession;
+    public Key $issuer_key;
 }

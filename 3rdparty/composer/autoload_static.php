@@ -1951,6 +1951,7 @@ class ComposerStaticInit030607167f1880aeac4e4171c437e0c4
         'chillerlan\\Settings\\SettingsContainerInterface' => __DIR__ . '/..' . '/chillerlan/php-settings-container/src/SettingsContainerInterface.php',
         'idunion\\sdjwt\\SDJWT' => __DIR__ . '/..' . '/idunion/php-sd-jwt/src/sdjwt.php',
         'idunion\\sdjwt\\SDJWT_Components' => __DIR__ . '/..' . '/idunion/php-sd-jwt/src/sdjwt.php',
+        'idunion\\sdjwt\\StatusList' => __DIR__ . '/..' . '/idunion/php-sd-jwt/src/statuslist.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

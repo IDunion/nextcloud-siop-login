@@ -757,12 +757,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:IDunion/php-sd-jwt.git",
-                "reference": "2bbe3e9f765a731bc1448d9183213fa33754f8bd"
+                "reference": "d2c6de68309075486e33d0e7a803469e14b8a917"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/IDunion/php-sd-jwt/zipball/2bbe3e9f765a731bc1448d9183213fa33754f8bd",
-                "reference": "2bbe3e9f765a731bc1448d9183213fa33754f8bd",
+                "url": "https://api.github.com/repos/IDunion/php-sd-jwt/zipball/d2c6de68309075486e33d0e7a803469e14b8a917",
+                "reference": "d2c6de68309075486e33d0e7a803469e14b8a917",
                 "shasum": ""
             },
             "require": {
@@ -772,7 +772,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^10"
             },
-            "time": "2023-06-20T19:30:41+00:00",
+            "time": "2023-09-26T20:53:32+00:00",
             "default-branch": true,
             "type": "library",
             "installation-source": "dist",

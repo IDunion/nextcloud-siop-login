@@ -1569,4 +1569,5 @@ return array(
     'chillerlan\\Settings\\SettingsContainerInterface' => $vendorDir . '/chillerlan/php-settings-container/src/SettingsContainerInterface.php',
     'idunion\\sdjwt\\SDJWT' => $vendorDir . '/idunion/php-sd-jwt/src/sdjwt.php',
     'idunion\\sdjwt\\SDJWT_Components' => $vendorDir . '/idunion/php-sd-jwt/src/sdjwt.php',
+    'idunion\\sdjwt\\StatusList' => $vendorDir . '/idunion/php-sd-jwt/src/statuslist.php',
 );

@@ -43,7 +43,7 @@ final class SDJWTTest extends TestCase
         $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
-        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
+        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", true);
         $this->assertisObject($out);
     }
 
@@ -53,7 +53,7 @@ final class SDJWTTest extends TestCase
         $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
-        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
+        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", true);
         $this->assertisObject($out);
     }
 
@@ -63,7 +63,7 @@ final class SDJWTTest extends TestCase
         $out = SDJWT::decode($input, function (string $issuer, $kid): string {
             $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
             return $input;
-        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg");
+        }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", true);
         $verified = file_get_contents(SDJWTTest::FIXTURES_DIR . "verified_contents.json");
         $verified = json_decode($verified, false, 512, JSON_BIGINT_AS_STRING);
         $this->assertEquals($verified, $out);
@@ -101,6 +101,28 @@ final class SDJWTTest extends TestCase
             return $input;
         }, "https://example.com/verifier", "XZOUco1u_gEPknxS78sWWg", false);
         $verified = file_get_contents(SDJWTTest::FIXTURES_DIR . "verified_recursive.json");
+        $verified = json_decode($verified, false, 512, JSON_BIGINT_AS_STRING);
+        $this->assertEquals($verified, $out);
+    }
+
+    public function testDecodeStatusListInvalid()
+    {
+        $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_statuslist_invalid.txt");
+        $this->expectException(UnexpectedValueException::class);
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
+            $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
+            return $input;
+        }, "", "", false, true);
+    }
+
+    public function testDecodeStatusList()
+    {
+        $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "presentation_statuslist_valid.txt");
+        $out = SDJWT::decode($input, function (string $issuer, $kid): string {
+            $input = file_get_contents(SDJWTTest::FIXTURES_DIR . "key.json");
+            return $input;
+        }, "", "", false, true);
+        $verified = file_get_contents(SDJWTTest::FIXTURES_DIR . "verified_status.json");
         $verified = json_decode($verified, false, 512, JSON_BIGINT_AS_STRING);
         $this->assertEquals($verified, $out);
     }
