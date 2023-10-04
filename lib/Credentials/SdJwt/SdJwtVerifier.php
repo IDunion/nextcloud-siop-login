@@ -16,8 +16,8 @@ class SdJwtVerifier {
             throw new LoginException('Presentation submission has an unexpected format or contains wrong values.');
         }
         $getIssuerCallback = new GetIssuerKey($sdJwtConfig['trusted_issuers'], $logger);
-        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, FALSE);
-        $profile["email"] = $userClaims->credentialSubject->email;
+        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, TRUE, TRUE);
+        $profile["email"] = $userClaims->email;
         
         return $profile;
     }
