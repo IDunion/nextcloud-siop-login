@@ -37,7 +37,7 @@ class SdJwtVerifier {
             return false;
         }
 
-        if ($ps->get('$.descriptor_map[0].format') != 'vp+sd-jwt') {
+        if ($ps->get('$.descriptor_map[0].format') != 'vc+sd-jwt') {
             return false;
         }
 
