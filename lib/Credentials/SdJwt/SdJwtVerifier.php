@@ -15,8 +15,17 @@ class SdJwtVerifier {
             $logger->error('Presentation submission has an unexpected format or contains wrong values: '.$presentationSubmission->getJson());
             throw new LoginException('Presentation submission has an unexpected format or contains wrong values.');
         }
+        $holder_binding = FALSE;
+        if (array_key_exists('holder_binding', $sdJwtConfig)) {
+            $holder_binding = $sdJwtConfig['holder_binding'];
+        }
+        $status_list = FALSE;
+        if (array_key_exists('status_list', $sdJwtConfig)) {
+            $status_list = $sdJwtConfig['status_list'];
+        }
+
         $getIssuerCallback = new GetIssuerKey($sdJwtConfig['trusted_issuers'], $logger);
-        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, TRUE, TRUE);
+        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, $holder_binding, $status_list);
         $profile["email"] = $userClaims->email;
         
         return $profile;
