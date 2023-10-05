@@ -1,16 +1,17 @@
 <?php
 
-namespace idunion\sdjwt;
+namespace idunion\SDJWT;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+
 use stdClass;
 use UnexpectedValueException;
 
-final class StatusList
+class StatusList
 {
     private const STATUSLIST_TYP = "statuslist+jwt";
-    private const STATUSLIST_CLAIM = "status_list";
+    public const STATUSLIST_CLAIM = "status_list";
     private const STATUSLIST_BITS = "bits";
     private const STATUSLIST_LIST = "lst";
 
@@ -83,3 +84,5 @@ final class StatusList
         return $status;
     }
 }
+
+?>

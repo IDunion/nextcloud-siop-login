@@ -1567,7 +1567,7 @@ return array(
     'chillerlan\\QRCode\\QROptionsTrait' => $vendorDir . '/chillerlan/php-qrcode/src/QROptionsTrait.php',
     'chillerlan\\Settings\\SettingsContainerAbstract' => $vendorDir . '/chillerlan/php-settings-container/src/SettingsContainerAbstract.php',
     'chillerlan\\Settings\\SettingsContainerInterface' => $vendorDir . '/chillerlan/php-settings-container/src/SettingsContainerInterface.php',
-    'idunion\\sdjwt\\SDJWT' => $vendorDir . '/idunion/php-sd-jwt/src/sdjwt.php',
-    'idunion\\sdjwt\\SDJWT_Components' => $vendorDir . '/idunion/php-sd-jwt/src/sdjwt.php',
-    'idunion\\sdjwt\\StatusList' => $vendorDir . '/idunion/php-sd-jwt/src/statuslist.php',
+    'idunion\\SDJWT\\SDJWT' => $vendorDir . '/idunion/php-sd-jwt/src/SDJWT.php',
+    'idunion\\SDJWT\\SDJWT_Components' => $vendorDir . '/idunion/php-sd-jwt/src/SDJWT.php',
+    'idunion\\SDJWT\\StatusList' => $vendorDir . '/idunion/php-sd-jwt/src/StatusList.php',
 );

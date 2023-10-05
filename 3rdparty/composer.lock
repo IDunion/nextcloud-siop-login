@@ -735,12 +735,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:IDunion/php-sd-jwt.git",
-                "reference": "d2c6de68309075486e33d0e7a803469e14b8a917"
+                "reference": "90ce75d524abb4ffcc2123c2aa8c7c1cdb864661"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/IDunion/php-sd-jwt/zipball/d2c6de68309075486e33d0e7a803469e14b8a917",
-                "reference": "d2c6de68309075486e33d0e7a803469e14b8a917",
+                "url": "https://api.github.com/repos/IDunion/php-sd-jwt/zipball/90ce75d524abb4ffcc2123c2aa8c7c1cdb864661",
+                "reference": "90ce75d524abb4ffcc2123c2aa8c7c1cdb864661",
                 "shasum": ""
             },
             "require": {
@@ -748,7 +748,8 @@
                 "php": "^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^10"
+                "phpunit/phpunit": "^10",
+                "psr/cache": "^1.0||^2.0"
             },
             "default-branch": true,
             "type": "library",
@@ -774,7 +775,7 @@
                 "source": "https://github.com/IDunion/php-sd-jwt/tree/main",
                 "issues": "https://github.com/IDunion/php-sd-jwt/issues"
             },
-            "time": "2023-09-26T20:53:32+00:00"
+            "time": "2023-10-05T15:51:29+00:00"
         },
         {
             "name": "psr/container",
@@ -3421,5 +3422,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

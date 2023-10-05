@@ -1,16 +1,16 @@
 <?php
 
-namespace idunion\sdjwt;
+namespace idunion\SDJWT;
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
+
 use stdClass;
 use UnexpectedValueException;
 use Traversable;
-use idunion\sdjwt\StatusList;
 
-final class SDJWT
+class SDJWT
 {
     private const SEPARATOR_SD = "~";
     private const SEPARATOR_JWT = ".";
@@ -84,6 +84,8 @@ final class SDJWT
             if($status != 0) {
                 throw new UnexpectedValueException('Status not valid');
             }
+            // remove status_list claim after validation
+            unset($jwt->{StatusList::STATUSLIST_CLAIM});
         }
         return $jwt;
     }
@@ -219,10 +221,12 @@ final class SDJWT
     }
 }
 
-final class SDJWT_Components
+class SDJWT_Components
 {
     public stdClass $jwt;
     public $sdclaims = array();
     public stdClass $proof_of_posession;
     public Key $issuer_key;
 }
+
+?>
