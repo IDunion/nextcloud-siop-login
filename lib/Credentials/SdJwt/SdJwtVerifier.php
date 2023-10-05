@@ -5,7 +5,7 @@ namespace OCA\OIDCLogin\Credentials\SdJwt;
 use OC\User\LoginException;
 
 use JsonPath\JsonObject;
-use idunion\sdjwt\SDJWT;
+use idunion\SDJWT\SDJWT;
 use OCA\OIDCLogin\Helper\SdJwtPresentationExchangeHelper;
 
 
