@@ -24,6 +24,7 @@ class SDJWT
     // expects callback get_issuer_key that resolves from string issuer to issuer pubkey
     public static function decode(string $raw, $get_issuer_key, string $expected_audience, string $nonce, ?bool $expect_holderbinding = TRUE, ?bool $check_statuslist = FALSE): mixed
     {
+        JWT::$leeway = 60;
         // split input and validate jwts
         $output = static::split($raw, $get_issuer_key, $expect_holderbinding);
 

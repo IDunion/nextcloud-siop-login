@@ -3,7 +3,7 @@
         'name' => 'ssi_login/3rdparty',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '43796d79f82ce826cfad19db183528f05c2ea81b',
+        'reference' => '33d75ed7b340efbb01fc70a44afdedffa9daefa4',
         'type' => 'library',
         'install_path' => __DIR__ . '/../',
         'aliases' => array(),
@@ -94,7 +94,7 @@
         'idunion/php-sd-jwt' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '90ce75d524abb4ffcc2123c2aa8c7c1cdb864661',
+            'reference' => '844d1f53a26c127b952321d5908fdbdd72121b6f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../idunion/php-sd-jwt',
             'aliases' => array(
@@ -246,7 +246,7 @@
         'ssi_login/3rdparty' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '43796d79f82ce826cfad19db183528f05c2ea81b',
+            'reference' => '33d75ed7b340efbb01fc70a44afdedffa9daefa4',
             'type' => 'library',
             'install_path' => __DIR__ . '/../',
             'aliases' => array(),
