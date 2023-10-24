@@ -5,7 +5,7 @@ namespace OCA\OIDCLogin\Credentials\SdJwt;
 use OC\User\LoginException;
 
 use JsonPath\JsonObject;
-use idunion\sdjwt\SDJWT;
+use idunion\SDJWT\SDJWT;
 use OCA\OIDCLogin\Helper\SdJwtPresentationExchangeHelper;
 
 
@@ -15,9 +15,18 @@ class SdJwtVerifier {
             $logger->error('Presentation submission has an unexpected format or contains wrong values: '.$presentationSubmission->getJson());
             throw new LoginException('Presentation submission has an unexpected format or contains wrong values.');
         }
+        $holder_binding = FALSE;
+        if (array_key_exists('holder_binding', $sdJwtConfig)) {
+            $holder_binding = $sdJwtConfig['holder_binding'];
+        }
+        $status_list = FALSE;
+        if (array_key_exists('status_list', $sdJwtConfig)) {
+            $status_list = $sdJwtConfig['status_list'];
+        }
+
         $getIssuerCallback = new GetIssuerKey($sdJwtConfig['trusted_issuers'], $logger);
-        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, FALSE);
-        $profile["email"] = $userClaims->credentialSubject->email;
+        $userClaims = SDJWT::decode($vpTokenRaw, $getIssuerCallback, $redirectUri, $nonce, $holder_binding, $status_list);
+        $profile["email"] = $userClaims->email;
         
         return $profile;
     }
@@ -37,7 +46,7 @@ class SdJwtVerifier {
             return false;
         }
 
-        if ($ps->get('$.descriptor_map[0].format') != 'vp+sd-jwt') {
+        if ($ps->get('$.descriptor_map[0].format') != 'vc+sd-jwt') {
             return false;
         }
 

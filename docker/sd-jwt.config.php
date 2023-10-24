@@ -55,6 +55,8 @@ $CONFIG = array (
     'trusted_issuers' => array(
       'https://issuer-openid4vc.ssi.tir.budru.de',
     ),
+    'holder_binding' => true,
+    'status_list' => true
   ),
   'oidc_login_request_domain' => 'openid4vp://',
   'oidc_create_groups' => true,

@@ -30,7 +30,7 @@ class SdJwtPresentationExchangeHelper {
                                 )
                             ),
                             array(
-                                "path" => array("$.credentialSubject.email")
+                                "path" => array("$.email")
                             )
                         )
                     )
