@@ -23,10 +23,10 @@ class SdJwtPresentationExchangeHelper {
                         "limit_disclosure" => "required",
                         "fields" => array(
                             array(
-                                "path" => array("$.type"),
+                                "path" => array("$.vct"),
                                 "filter" => array(
                                     "type" => "string",
-                                    "const" => "VerifiedEMail"
+                                    "const" => "https://credentials.idunion.org/VerifiedEMail"
                                 )
                             ),
                             array(
