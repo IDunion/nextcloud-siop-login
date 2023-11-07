@@ -55,7 +55,7 @@ class StatusList
         }
         $list_raw = $statuslist_token->{self::STATUSLIST_CLAIM}->{self::STATUSLIST_LIST};
         $list_decoded = self::base64_decode_urlsafe($list_raw);
-        $list = gzdecode($list_decoded);
+        $list = zlib_decode($list_decoded);
         $this->list = unpack('C*', $list, 0);
         $bits = $statuslist_token->{self::STATUSLIST_CLAIM}->{self::STATUSLIST_BITS};
         $this->divisor = 8 / $bits;
