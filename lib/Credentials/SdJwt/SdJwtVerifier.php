@@ -118,7 +118,9 @@ class GetIssuerKey {
         // walk the jwks and find correct kid
         foreach ($jwks->keys as $key){
             if ($key->kid == $kid) {
-                return json_encode($key);
+                $encoded = json_encode($key);
+                $this->logger->debug('Found .well-known key: ' . $issuer . " -> " . $encoded);
+                return $encoded;
             }
         }
         throw new LoginException('kid not found at /.well-known/jwt-issuer');

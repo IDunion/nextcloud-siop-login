@@ -12,6 +12,7 @@ class RequestObject extends Entity implements JsonSerializable
     protected $requestUri;
     protected $requestObject;
     protected $creationTimestamp;
+    public $id;
 
     public function __construct()
     {
@@ -19,6 +20,7 @@ class RequestObject extends Entity implements JsonSerializable
         $this->addType('creationTimestamp', Types::INTEGER);
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return [

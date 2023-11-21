@@ -15,7 +15,7 @@ class Token extends Entity implements JsonSerializable
     protected $used;
     protected $viaPost;
     protected $creationTimestamp;
-    protected $id;
+    public $id;
 
     public function __construct()
     {
