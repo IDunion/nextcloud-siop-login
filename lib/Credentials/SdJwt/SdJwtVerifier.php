@@ -50,7 +50,7 @@ class SdJwtVerifier {
             return false;
         }
 
-        if ($ps->get('$.descriptor_map[0].path') != '$') {
+        if ($ps->get('$.descriptor_map[0].path') != '$[0]') {
             return false;
         }
 

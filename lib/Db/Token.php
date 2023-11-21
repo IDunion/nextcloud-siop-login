@@ -15,6 +15,7 @@ class Token extends Entity implements JsonSerializable
     protected $used;
     protected $viaPost;
     protected $creationTimestamp;
+    protected $id;
 
     public function __construct()
     {
@@ -24,6 +25,7 @@ class Token extends Entity implements JsonSerializable
         $this->addType('creationTimestamp', Types::INTEGER);
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return [
